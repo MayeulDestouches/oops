@@ -1,0 +1,19 @@
+forecast length: P60D
+geometry:
+  nx: 60
+  ny: 19
+  depths: [4000.0, 6000.0]
+initial condition:
+  date: 2009-11-01T00:00:00Z
+  read_from_file: 0
+model:
+  name: QG
+  tstep: PT1H
+output:
+  datadir: Data
+  date: 2009-11-01T00:00:00Z
+  exp: attractor
+  frequency: P60D
+  type: fc
+prints:
+  frequency: P60D

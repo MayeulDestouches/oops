@@ -1,10 +1,10 @@
 state geometry:
-  nx: 40
-  ny: 20
+  nx: 60
+  ny: 19
   depths: [4500.0, 5500.0]
 increment geometry:
-  nx: 40
-  ny: 20
+  nx: 60
+  ny: 19
   depths: [4500.0, 5500.0]
 state1:
   date: '2010-01-01T12:00:00Z'
@@ -20,3 +20,4 @@ output:
 
 test:
   reference filename: testoutput/diffstates.test
+  test output filename: testoutput/diffstates.log.out

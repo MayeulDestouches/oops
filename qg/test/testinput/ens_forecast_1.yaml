@@ -1,7 +1,7 @@
 forecast length: P2D
 initial condition:
   date: 2009-12-31T00:00:00Z
-  filename: Data/truth.fc.2009-12-15T00:00:00Z.P16D.nc
+  filename: Data/truth.fc.2009-12-31T00:00:00Z.PT0S.nc
 model:
   name: QG
   tstep: PT1H
@@ -15,6 +15,6 @@ output:
 prints:
   frequency: PT3H
 geometry:
-  nx: 40
-  ny: 20
+  nx: 60
+  ny: 19
   depths: [4500.0, 5500.0]

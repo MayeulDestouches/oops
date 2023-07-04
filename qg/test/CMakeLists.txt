@@ -1,3 +1,5 @@
+set( NEW_ATTRACTOR False )
+
 list( APPEND qg_testinput
   testinput/3densvar.yaml
   testinput/3dvar.yaml
@@ -23,6 +25,7 @@ list( APPEND qg_testinput
   testinput/analytic_forecast.yaml
   testinput/convertincrement.yaml
   testinput/convertstate.yaml
+  testinput/convertstate_bicubic.yaml
   testinput/dfi.yaml
   testinput/diffstates.yaml
   testinput/dirac_cov.yaml
@@ -85,6 +88,12 @@ list( APPEND qg_testinput
   testinput/uniform_field_inflation.yaml
 )
 
+if(NEW_ATTRACTOR)
+    list( APPEND qg_testinput
+      testinput/attractor.yaml
+    )
+endif()
+
 list( APPEND qg_testoutput
   testoutput/3densvar.test
   testoutput/3dvar.test
@@ -108,6 +117,7 @@ list( APPEND qg_testoutput
   testoutput/analytic_forecast.test
   testoutput/convertincrement.test
   testoutput/convertstate.test
+  testoutput/convertstate_bicubic.test
   testoutput/addincrement.test
   testoutput/addincrement_scaled.test
   testoutput/dfi.test
@@ -168,10 +178,25 @@ ecbuild_add_resources( TARGET   qg_test_scripts
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Data)
 
+# Link attractor file
+if(NOT NEW_ATTRACTOR)
+    message( STATUS "No new attractor run: link existing final state" )
+    set( FILENAME Data/attractor.fc.2009-11-01T00:00:00Z.P60D.nc )
+    execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink
+           ${CMAKE_CURRENT_SOURCE_DIR}/${FILENAME}
+           ${CMAKE_CURRENT_BINARY_DIR}/${FILENAME} )
+endif()
 
 #####################################################################
-# truth and make_obs_4d_24h are required for interface tests
+# attractor, truth and make_obs_4d_24h are required for interface tests
 #####################################################################
+
+if(NEW_ATTRACTOR)
+    ecbuild_add_test( TARGET test_qg_attractor
+                      OMP 2
+                      ARGS testinput/attractor.yaml
+                      COMMAND qg_forecast.x )
+endif()
 
 ecbuild_add_test( TARGET test_qg_truth
                   OMP 2
@@ -512,6 +537,12 @@ ecbuild_add_test( TARGET test_qg_dfi
 ecbuild_add_test( TARGET test_qg_convertstate
                   OMP    2
                   ARGS testinput/convertstate.yaml
+                  COMMAND qg_convertstate.x
+                  TEST_DEPENDS test_qg_forecast )
+
+ecbuild_add_test( TARGET test_qg_convertstate_bicubic
+                  OMP    2
+                  ARGS testinput/convertstate_bicubic.yaml
                   COMMAND qg_convertstate.x
                   TEST_DEPENDS test_qg_forecast )
 

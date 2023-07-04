@@ -40,8 +40,12 @@ real(kind_real) :: zz
 ! Subtract the beta term and the heating term
 !$omp parallel do schedule(static) private(iy)
 do iy=1,geom%ny
-  q_nobc(:,iy,:) = q(:,iy,:)-geom%bet(iy)
-  q_nobc(:,iy,1) = q_nobc(:,iy,1)-geom%heat(:,iy)
+  q_nobc(:,iy,:) = q(:,iy,:)-geom%beta0y(iy)
+  if(geom%ph_coeff/=0) then
+    q_nobc(:,iy,1) = q_nobc(:,iy,1)-geom%heat(:,iy)*geom%ph_coeff
+  else
+    q_nobc(:,iy,1) = q_nobc(:,iy,1)-geom%heat(:,iy)
+  endif
 enddo
 !$omp end parallel do
 

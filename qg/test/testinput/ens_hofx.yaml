@@ -7,3 +7,4 @@ files:
 
 test:
   reference filename: testoutput/ens_hofx.test
+  test output filename: testoutput/ens_hofx.log.out

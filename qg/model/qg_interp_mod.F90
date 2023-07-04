@@ -1,25 +1,24 @@
 ! (C) Copyright 2009-2016 ECMWF.
-! 
+!
 ! This software is licensed under the terms of the Apache Licence Version 2.0
-! which can be obtained at http://www.apache.org/licenses/LICENSE-2.0. 
-! In applying this licence, ECMWF does not waive the privileges and immunities 
+! which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+! In applying this licence, ECMWF does not waive the privileges and immunities
 ! granted to it by virtue of its status as an intergovernmental organisation nor
 ! does it submit to any jurisdiction.
 
 module qg_interp_mod
 
-use fckit_log_module,only: fckit_log
+use fckit_log_module, only: fckit_log
 use kinds
 use qg_constants_mod
 use qg_geom_mod
-use qg_projection_mod
 use qg_tools_mod
 
 implicit none
 
 private
-public :: qg_interp_trilinear, qg_interp_bilinear, qg_interp_bilinear_ad, &
-        & qg_vert_interp, qg_vert_interp_ad, &
+public :: qg_interp_trilinear,qg_interp_bilinear,qg_interp_bilinear_ad, &
+        & qg_vert_interp,qg_vert_interp_ad, &
         & qg_interp_bicubic,qg_interp_bicubic_tl,qg_interp_bicubic_ad, &
         & find_x_indices,find_y_indices
 ! ------------------------------------------------------------------------------
@@ -27,6 +26,7 @@ contains
 ! ------------------------------------------------------------------------------
 !> Trilinear interpolation
 subroutine qg_interp_trilinear(geom,lon,lat,z,field,val)
+implicit none
 
 ! Passed variables
 type(qg_geom),intent(in) :: geom                             !< Geometry
@@ -45,7 +45,7 @@ real(kind_real) :: ax,ay,az
 real(kind_real) :: oo,op1,p1o,p1p1,o,p1
 
 ! Convert lon/lat to x/y
-call lonlat_to_xy(lon,lat,x,y)
+call geom%aproj%lonlat2xy(lon,lat,x,y)
 
 ! Find indices
 call find_x_indices(geom,x,jxm1,jxo,jxp1,jxp2,ax)
@@ -82,6 +82,8 @@ end subroutine qg_interp_trilinear
 !> Bilinear interpolation
 subroutine qg_interp_bilinear(geom,lon,lat,field,val)
 
+implicit none
+
 ! Passed variables
 type(qg_geom),intent(in) :: geom                             !< Geometry
 real(kind_real),intent(in) :: lon                            !< Longitude
@@ -96,7 +98,7 @@ integer :: jz
 real(kind_real) :: x,y,ax,ay,aa,bb
 
 ! Convert lon/lat to x/y
-call lonlat_to_xy(lon,lat,x,y)
+call geom%aproj%lonlat2xy(lon,lat,x,y)
 
 ! Find indices
 call find_x_indices(geom,x,jxm1,jxo,jxp1,jxp2,ax)
@@ -119,11 +121,11 @@ if (jxp1 < 1 .or. jxp1 > geom%nx) call abor1_ftn('qg_interp_bilinear: error jxp1
 if (jyo  < 1 .or. jyo  > geom%ny) call abor1_ftn('qg_interp_bilinear: error jyo')
 if (jyp1 < 1 .or. jyp1 > geom%ny) call abor1_ftn('qg_interp_bilinear: error jyp1')
 
-do jz = 1, geom%nz
+do jz=1,geom%nz
   ! Interpolate along x
   aa = (1.0-ax) * field(jxo,jyo ,jz) + ax * field(jxp1,jyo ,jz)
   bb = (1.0-ax) * field(jxo,jyp1,jz) + ax * field(jxp1,jyp1,jz)
-  
+
   ! Interpolate along y
   val(jz) = (1.0-ay) * aa + ay * bb
 enddo
@@ -132,6 +134,8 @@ end subroutine qg_interp_bilinear
 ! ------------------------------------------------------------------------------
 !> Interpolation - adjoint
 subroutine qg_interp_bilinear_ad(geom,lon,lat,val,field)
+
+implicit none
 
 ! Passed variables
 type(qg_geom),intent(in) :: geom                                !< Geometry
@@ -147,7 +151,7 @@ integer :: jz
 real(kind_real) :: x,y,ax,ay,aa,bb
 
 ! Convert lon/lat to x/y
-call lonlat_to_xy(lon,lat,x,y)
+call geom%aproj%lonlat2xy(lon,lat,x,y)
 
 ! Find indices
 call find_x_indices(geom,x,jxm1,jxo,jxp1,jxp2,ax)
@@ -165,7 +169,7 @@ if (jyp1>geom%ny) then
   jyp1 = geom%ny
 endif
 
-do jz = 1, geom%nz
+do jz=1,geom%nz
   ! Interpolate along y
   aa = (1.0-ay) * val(jz)
   bb = ay       * val(jz)
@@ -180,31 +184,47 @@ enddo
 end subroutine qg_interp_bilinear_ad
 ! ------------------------------------------------------------------------------
 subroutine qg_vert_interp(nz,z,zout,col,val)
-integer, intent(in) :: nz
-real(kind_real),intent(in) :: z(nz)
-real(kind_real),intent(in) :: zout
-real(kind_real),intent(in) :: col(nz)
-real(kind_real),intent(out) :: val
 
+implicit none
+
+! Passed variables
+integer, intent(in) :: nz             !< Number of levels
+real(kind_real),intent(in) :: z(nz)   !< Levels
+real(kind_real),intent(in) :: zout    !< Output level
+real(kind_real),intent(in) :: col(nz) !< Column values
+real(kind_real),intent(out) :: val    !< Output value
+
+! Local variables
 integer :: izobs,izp1
 real(kind_real) :: az
 
+! Find indices
 call find_z_indx(nz,z,zout,izobs,izp1,az)
+
+! Interpolate along z
 val = (1.0-az)*col(izobs) + az*col(izp1)
 
 end subroutine qg_vert_interp
 ! ------------------------------------------------------------------------------
 subroutine qg_vert_interp_ad(nz,z,zout,col,val)
-integer, intent(in) :: nz
-real(kind_real),intent(in) :: z(nz)
-real(kind_real),intent(in) :: zout
-real(kind_real),intent(inout) :: col(nz)
-real(kind_real),intent(in) :: val
 
+implicit none
+
+! Passed variables
+integer, intent(in) :: nz                !< Number of levels
+real(kind_real),intent(in) :: z(nz)      !< Levels
+real(kind_real),intent(in) :: zout       !< Output level
+real(kind_real),intent(inout) :: col(nz) !< Column values
+real(kind_real),intent(in) :: val        !< Output value
+
+! Local variables
 integer :: izobs,izp1
 real(kind_real) :: az
 
+! Find indices
 call find_z_indx(nz,z,zout,izobs,izp1,az)
+
+! Interpolate along z
 col(izobs) = (1.0-az) * val
 col(izp1)  =      az  * val
 
@@ -212,6 +232,8 @@ end subroutine qg_vert_interp_ad
 ! ------------------------------------------------------------------------------
 !> Bicubic horizontal interpolation
 subroutine qg_interp_bicubic(geom,x,y,gfld2dext,val)
+
+implicit none
 
 ! Passed variables
 type(qg_geom),intent(in) :: geom                              !< Geometry
@@ -242,6 +264,8 @@ end subroutine qg_interp_bicubic
 ! ------------------------------------------------------------------------------
 !> Bicubic horizontal interpolation - tangent linear
 subroutine qg_interp_bicubic_tl(geom,x,y,gfld2dext_traj,dx,dy,gfld2dext,val)
+
+implicit none
 
 ! Passed variables
 type(qg_geom),intent(in) :: geom                                   !< Geometry
@@ -289,6 +313,8 @@ end subroutine qg_interp_bicubic_tl
 ! ------------------------------------------------------------------------------
 !> Bicubic horizontal interpolation - adjoint
 subroutine qg_interp_bicubic_ad(geom,x,y,gfld2dext_traj,val,dx,dy,gfld2dext)
+
+implicit none
 
 ! Passed variables
 type(qg_geom),intent(in) :: geom                                   !< Geometry
@@ -342,8 +368,10 @@ dy = dy+ay/geom%deltay
 
 end subroutine qg_interp_bicubic_ad
 ! ------------------------------------------------------------------------------
-!> Find x indices 
+!> Find x indices
 subroutine find_x_indices(geom,x,jxm1,jxo,jxp1,jxp2,ax)
+
+implicit none
 
 ! Passed variables
 type(qg_geom),intent(in) :: geom  !< Geometry
@@ -359,19 +387,21 @@ integer :: ix
 real(kind_real) :: xx
 
 ! Initialization
-if (x<0.0) then
+if (x<xmin) then
   xx = x+domain_zonal
-elseif (x>domain_zonal) then
+elseif (x>xmax) then
   xx = x-domain_zonal
 else
   xx = x
 endif
 
+! Check value
+if ((xx<xmin).or.(xx>xmax)) then
+   call abor1_ftn('find_x_indices: x is out of bounds')
+end if
+
 ! Find base index and weight
-if ((0.0<=xx).and.(xx<geom%x(1))) then
-  jxo = geom%nx
-  ax = (domain_zonal-geom%x(jxo)+xx)/geom%deltax
-elseif ((geom%x(geom%nx)<=xx).and.(xx<=domain_zonal)) then
+if (xx>=geom%x(geom%nx)) then
   jxo = geom%nx
   ax = (xx-geom%x(jxo))/geom%deltax
 else
@@ -396,8 +426,10 @@ if (jxp2>geom%nx) jxp2 = jxp2-geom%nx
 
 end subroutine find_x_indices
 ! ------------------------------------------------------------------------------
-!> Find y indices 
+!> Find y indices
 subroutine find_y_indices(geom,y,jym1,jyo,jyp1,jyp2,ay)
+
+implicit none
 
 ! Passed variables
 type(qg_geom),intent(in) :: geom  !< Geometry
@@ -413,13 +445,13 @@ integer :: iy
 real(kind_real) :: yy
 
 ! Initialization
-yy = max(0.0_kind_real,min(y,domain_meridional))
+yy = max(ymin,min(y,ymax))
 
 ! Find base index and weight
-if ((0.0<=yy).and.(yy<geom%y(1))) then
+if (yy<geom%y(1)) then
   jyo = 0
-  ay = yy/geom%deltay
-elseif ((geom%y(geom%ny)<=yy).and.(yy<=domain_meridional)) then
+  ay = (yy-ymin)/geom%deltay
+elseif (yy>=geom%y(geom%ny)) then
   jyo = geom%ny
   ay = (yy-geom%y(jyo))/geom%deltay
 else
@@ -441,8 +473,10 @@ jyp2 = jyo+2
 
 end subroutine find_y_indices
 ! ------------------------------------------------------------------------------
-!> Find z indices 
+!> Find z indices
 subroutine find_z_indices(geom,z,jzo,jzp1,az)
+
+implicit none
 
 ! Passed variables
 type(qg_geom),intent(in) :: geom  !< Geometry
@@ -455,8 +489,10 @@ call find_z_indx(geom%nz, geom%z(:), z, jzo,jzp1,az)
 
 end subroutine find_z_indices
 ! ------------------------------------------------------------------------------
-!> Find z indices 
+!> Find z indices
 subroutine find_z_indx(nz,z,zout,jzo,jzp1,az)
+
+implicit none
 
 ! Passed variables
 integer,intent(in) :: nz
@@ -485,7 +521,7 @@ else
       exit
     end if
   end do
-  if (jzo==-1) call abor1_ftn('qg_interp_mod:find_z_indx: cannot find jzo')  
+  if (jzo==-1) call abor1_ftn('qg_interp_mod:find_z_indx: cannot find jzo')
 end if
 az = (zout-z(jzo))/(z(jzo+1)-z(jzo))
 
@@ -497,6 +533,8 @@ end subroutine find_z_indx
 !> Cubic interpolation
 subroutine cubic(a,m1,o,p1,p2,res)
 
+implicit none
+
 ! Passed variables
 real(kind_real),intent(in) :: a    !< Coefficient
 real(kind_real),intent(in) :: m1   !< Minus 1 value
@@ -505,6 +543,7 @@ real(kind_real),intent(in) :: p1   !< Plus 1 value
 real(kind_real),intent(in) :: p2   !< Plus 2 value
 real(kind_real),intent(out) :: res !< Result
 
+! Compute cubic interpolation
 res = -a*(a-1.0)*(a-2.0)/6.0*m1 &
     & +(a+1.0)*(a-1.0)*(a-2.0)/2.0*o &
     & -(a+1.0)*a*(a-2.0)/2.0*p1 &
@@ -514,6 +553,8 @@ end subroutine cubic
 ! ------------------------------------------------------------------------------
 !> Cubic interpolation - tangent linear
 subroutine cubic_tl(a_traj,m1_traj,o_traj,p1_traj,p2_traj,a,m1,o,p1,p2,res)
+
+implicit none
 
 ! Passed variables
 real(kind_real),intent(in) :: a_traj  !< Coefficient trajectory
@@ -528,6 +569,7 @@ real(kind_real),intent(in) :: p1      !< Plus 1 perturbation
 real(kind_real),intent(in) :: p2      !< Plus 2 perturbation
 real(kind_real),intent(out) :: res    !< Result
 
+! Compute cubic interpolation
 res = -a*(a_traj-1.0)*(a_traj-2.0)/6.0*m1_traj &
     & -a_traj*a*(a_traj-2.0)/6.0*m1_traj &
     & -a_traj*(a_traj-1.0)*a/6.0*m1_traj &
@@ -550,6 +592,8 @@ end subroutine cubic_tl
 !> Cubic interpolation - adjoint
 subroutine cubic_ad(a_traj,m1_traj,o_traj,p1_traj,p2_traj,res,a,m1,o,p1,p2)
 
+implicit none
+
 ! Passed variables
 real(kind_real),intent(in) :: a_traj  !< Coefficient trajectory
 real(kind_real),intent(in) :: m1_traj !< Minus 1 trajectory
@@ -563,6 +607,7 @@ real(kind_real),intent(inout) :: o    !< Origin perturbation
 real(kind_real),intent(inout) :: p1   !< Plus 1 perturbation
 real(kind_real),intent(inout) :: p2   !< Plus 2 perturbation
 
+! Compute cubic interpolation
 a = a+(-(a_traj-1.0)*(a_traj-2.0)/6.0*m1_traj &
   & -a_traj*(a_traj-2.0)/6.0*m1_traj &
   & -a_traj*(a_traj-1.0)/6.0*m1_traj &

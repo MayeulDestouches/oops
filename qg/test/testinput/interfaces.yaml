@@ -5,10 +5,10 @@ background error:
   standard_deviation: 8.0e6
   vertical_length_scale: 2787.0
 covariance test:
-  tolerance: 0.06
-geometry:
-  nx: 40
-  ny: 20
+  tolerance: 0.07
+geometry: &geometry
+  nx: 60
+  ny: 19
   depths: [4500.0, 5500.0]
 linear model:
   trajectory:
@@ -30,14 +30,15 @@ linear variable change tests:
     input variables:  [q]
     output variables: [x]
   test inverse: 1
-  tolerance inverse: 1.0e-8
+  tolerance inverse: 1.1e-8
 localization:
   horizontal_length_scale: 4.0e6
   localization method: QG
   maximum_condition_number: 1.0e6
   standard_deviation: 1.0
   vertical_length_scale: 30000.0
-locations: {}
+locations:
+  geometry: *geometry
 model:
   name: QG
   tstep: PT1H
@@ -45,7 +46,7 @@ model aux control: {}
 model aux error: {}
 model test:
   forecast length: PT24H
-  final norm: 170792839.48101598
+  final norm: 151969314.95963731
   tolerance: 0.005
 observations:
 - obs error:
@@ -54,7 +55,7 @@ observations:
     filename: Data/truth.obs4d_24h.stream.gom
   geovals test:
     state variables: [x]
-    norm: 6817614730.9630165
+    norm: 5541496193.0326614
   obs space:
     obsdatain:
       obsfile: Data/truth.obs4d_24h.nc
@@ -74,32 +75,33 @@ observations:
   obs bias test:
     norm: 10.0
     relative tolerance: 0.0
-  rms ref: 183502589.5028424
+  rms ref: 150631343.6544801
   reference global nobs: 800
   tolerance: 1.0e-8
   obs localizations:
   - localization method: Heaviside
     lengthscale: 0.0
     reference local nobs: [0]
+    print iterator: true
     reference gridpoints:
-      lons: [-175.5]
-      lats: [5.623]
+      lons: [-180.0]
+      lats: [25.5296997]
       depths: [0.0]
     reference rms: [0]
   obs iterator test:
     tolerance: 1.0e-6
     reference nlocs: 800
-    lon1: -29.87208056
-    lat1: 3.637673423
-    lon2: 178.9865309
-    lat2: 8.23197272
+    lon1: -29.8720806
+    lat1: 21.1647969
+    lon2: 178.986531
+    lat2: 25.0293811
 - obs error:
     covariance model: diagonal
   geovals:
     filename: Data/truth.obs4d_24h.wind.gom
   geovals test:
     state variables: [u, v]
-    norm: 1440.9708190018748
+    norm: 1814.6856223922871
   obs space:
     obsdatain:
       obsfile: Data/truth.obs4d_24h.nc
@@ -119,7 +121,7 @@ observations:
   obs bias test:
     norm: 10.0
     relative tolerance: 0.0
-  rms ref: 39.644266100943696
+  rms ref: 47.826823638574716
   reference global nobs: 800
   tolerance: 1.0e-8
   obs localizations:
@@ -127,24 +129,24 @@ observations:
     lengthscale: 1.e8
     reference local nobs: [800]
     reference gridpoints:
-      lons: [-175.5]
-      lats: [5.623]
+      lons: [-180.0]
+      lats: [25.5296997]
       depths: [0.0]
     reference rms: [1]
   obs iterator test:
     tolerance: 1.0e-6
     reference nlocs: 400
-    lon1: -154.0892581
-    lat1: 80.79695176
-    lon2: -74.03059012
-    lat2: 78.99264774
+    lon1: -154.089258
+    lat1: 77.1469269
+    lon2: -74.0305901
+    lat2: 75.6447819
 - obs error:
     covariance model: diagonal
   geovals:
     filename: Data/truth.obs4d_24h.wspeed.gom
   geovals test:
     state variables: [u, v]
-    norm: 1471.5548038687134
+    norm: 1684.1026123011975
   obs space:
     obsdatain:
       obsfile: Data/truth.obs4d_24h.nc
@@ -157,35 +159,35 @@ observations:
     coef TL: 1.e-4
     tolerance AD: 1.0e-10
     tolerance TL: 1.0e-6
-  rms ref: 58.474969231121605
+  rms ref: 65.887417395396739
   reference global nobs: 400
   tolerance: 1.0e-8
   obs localizations:
   - localization method: Heaviside
     lengthscale: 5.e6
-    reference local nobs: [48]
+    reference local nobs: [72]
     reference gridpoints:
-      lons: [-175.5]
-      lats: [5.623]
+      lons: [-180.0]
+      lats: [25.5296997]
       depths: [0.0]
     reference rms: [1]  
   obs iterator test:
     tolerance: 1.0e-6
     reference nlocs: 400
-    lon1: 112.2691295
-    lat1: 66.91093417
-    lon2: 131.4322691
-    lat2: 82.16827599
+    lon1: 112.26913
+    lat1: 66.3248607
+    lon2: 131.432269
+    lat2: 78.3130126
 background:
   date: 2009-12-31T00:00:00Z
-  filename: Data/truth.fc.2009-12-15T00:00:00Z.P16D.nc
+  filename: Data/truth.fc.2009-12-31T00:00:00Z.PT0S.nc
 initial condition:
   date: 2009-12-31T00:00:00Z
-  filename: Data/truth.fc.2009-12-15T00:00:00Z.P16D.nc
+  filename: Data/truth.fc.2009-12-31T00:00:00Z.PT0S.nc
 state test:
   statefile:
     date: 2009-12-31T00:00:00Z
-    filename: Data/truth.fc.2009-12-15T00:00:00Z.P16D.nc
+    filename: Data/truth.fc.2009-12-31T00:00:00Z.PT0S.nc
   write then read test:
     state write:
       datadir: Data
@@ -200,8 +202,8 @@ state test:
       method: large-vortices
     date: 2009-12-31T00:00:00Z
   date: 2009-12-31T00:00:00Z
-  norm file: 195415162.30387616
-  norm generated state: 148702024.11261204
+  norm file: 163866102.71011469
+  norm generated state: 144890084.39043772
   tolerance: 1.0e-08
 test date: 2009-12-31T00:00:00Z
 variable change tests:
@@ -210,14 +212,14 @@ variable change tests:
     output variables: [q]
   state:
     date: 2009-12-31T00:00:00Z
-    filename: Data/truth.fc.2009-12-15T00:00:00Z.P16D.nc
+    filename: Data/truth.fc.2009-12-31T00:00:00Z.PT0S.nc
   tolerance inverse: 1.0e-8
 - variable change:
     input variables: [q]
     output variables: [x]
   state:
     date: 2009-12-31T00:00:00Z
-    filename: Data/truth.fc.2009-12-15T00:00:00Z.P16D.nc
+    filename: Data/truth.fc.2009-12-31T00:00:00Z.PT0S.nc
     state variables: [q]
   tolerance inverse: 1.0e-8
 - variable change:
@@ -226,7 +228,7 @@ variable change tests:
   inverse first: true
   state:
     date: 2009-12-31T00:00:00Z
-    filename: Data/truth.fc.2009-12-15T00:00:00Z.P16D.nc
+    filename: Data/truth.fc.2009-12-31T00:00:00Z.PT0S.nc
     state variables: [q]
   tolerance inverse: 1.0e-8
 - variable change:
@@ -235,7 +237,7 @@ variable change tests:
   inverse first: true
   state:
     date: 2009-12-31T00:00:00Z
-    filename: Data/truth.fc.2009-12-15T00:00:00Z.P16D.nc
+    filename: Data/truth.fc.2009-12-31T00:00:00Z.PT0S.nc
   tolerance inverse: 1.0e-8
 analysis variables: [x]
 loc variables: [x]

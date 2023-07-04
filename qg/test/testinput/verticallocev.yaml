@@ -1,7 +1,7 @@
 geometry:
-  nx: 40
-  ny: 20
-  depths: [4500, 5500, 6500, 7500, 8500, 9500]   # note: these are only for the test (specifying 6 levels),
+  nx: 60
+  ny: 19
+  depths: [1000, 1250, 1500, 1750, 2000, 2500]   # note: these are only for the test (specifying 6 levels),
                                                  # and have not been scientifically validated
 test date: &date 2009-12-31T00:00:00Z
 

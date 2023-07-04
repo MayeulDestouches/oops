@@ -63,8 +63,12 @@ enddo
 ! Add the beta term and the heating term
 !$omp parallel do schedule(static) private(iy)
 do iy=1,geom%ny
-  q(:,iy,:) = q(:,iy,:)+geom%bet(iy)
-  q(:,iy,1) = q(:,iy,1)+geom%heat(:,iy)
+  q(:,iy,:) = q(:,iy,:)+geom%beta0y(iy)
+  if(geom%ph_coeff/=0) then
+    q(:,iy,1) = q(:,iy,1)+geom%heat(:,iy)*geom%ph_coeff
+  else
+    q(:,iy,1) = q(:,iy,1)+geom%heat(:,iy)
+  end if
 enddo
 !$omp end parallel do
 

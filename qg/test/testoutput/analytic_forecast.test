@@ -1,12 +1,12 @@
 Initial state: 
   Valid time: 2010-01-01T00:00:00Z
-  Resolution = 40, 20, 2
-  Streamfunction         :  Min= -4.1289e+08, Max=  4.1289e+08, RMS=  1.5614e+08
-  Streamfunction LBC     :  Min= -3.6309e+01, Max=  0.0000e+00, RMS=  1.8839e+01
-  Potential vorticity LBC:  Min= -7.3653e-05, Max=  8.0801e-05, RMS=  7.5159e-05
+  Resolution = 60, 19, 2
+  Streamfunction         :  Min= -4.0500e+08, Max=  4.0500e+08, RMS=  1.5245e+08
+  Streamfunction LBC     :  Min= -4.9598e-08, Max= -0.0000e+00, RMS=  2.5734e-08
+  Potential vorticity LBC:  Min= -5.1811e-05, Max=  5.2635e-05, RMS=  4.9146e-05
 Final state: 
   Valid time: 2010-01-05T00:00:00Z
-  Resolution = 40, 20, 2
-  Streamfunction         :  Min= -4.2065e+08, Max=  4.2065e+08, RMS=  1.8324e+08
-  Streamfunction LBC     :  Min= -3.6309e+01, Max=  0.0000e+00, RMS=  1.8839e+01
-  Potential vorticity LBC:  Min= -7.3653e-05, Max=  8.0801e-05, RMS=  7.5159e-05
+  Resolution = 60, 19, 2
+  Streamfunction         :  Min= -3.0865e+08, Max=  3.8718e+08, RMS=  1.3006e+08
+  Streamfunction LBC     :  Min= -4.9598e-08, Max= -0.0000e+00, RMS=  2.5734e-08
+  Potential vorticity LBC:  Min= -5.1811e-05, Max=  5.2635e-05, RMS=  4.9146e-05

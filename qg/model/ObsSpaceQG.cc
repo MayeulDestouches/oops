@@ -19,7 +19,6 @@
 #include "atlas/field.h"
 #include "eckit/config/Configuration.h"
 #include "eckit/exception/Exceptions.h"
-#include "eckit/geometry/Sphere.h"
 
 #include "oops/util/abor1_cpp.h"
 #include "oops/util/DateTime.h"
@@ -91,6 +90,7 @@ ObsSpaceQG::ObsSpaceQG(const Parameters_ & params, const eckit::mpi::Comm & comm
 
   //  Generate locations etc... if required
   if (params.generate.value() != boost::none) {
+    // Location generation parameters
     const ObsGenerateParameters &gParams = *params.generate.value();
     const util::Duration first(gParams.begin);
     const util::DateTime start(winbgn_ + first);
@@ -101,9 +101,10 @@ ObsSpaceQG::ObsSpaceQG(const Parameters_ & params, const eckit::mpi::Comm & comm
       ++nobstimes;
       now += freq;
     }
-    int iobs;
-    qg_obsdb_generate_f90(key_, obsname_.size(), obsname_.c_str(), gParams.toConfiguration(),
-                          start, freq, nobstimes, iobs);
+
+    // Call fortran
+    qg_obsdb_generate_f90(key_, obsname_.size(), obsname_.c_str(),
+                          gParams.toConfiguration(), start, freq, nobstimes);
   }
 }
 

@@ -29,6 +29,7 @@ class ErrorCovarianceParameters : public oops::ModelSpaceCovarianceParametersBas
   oops::RequiredParameter<double> vertical_length_scale{"vertical_length_scale", this};
   oops::RequiredParameter<double> maximum_condition_number{"maximum_condition_number", this};
   oops::Parameter<int> randomization_seed{"randomization_seed", 7, this};
+  oops::Parameter<double> attenuation_length{"attenuation_length", 0.0, this};
 };
 // -----------------------------------------------------------------------------
 

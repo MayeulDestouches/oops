@@ -25,22 +25,21 @@ implicit none
 private
 public :: qg_error_covariance_config
 public :: qg_error_covariance_registry
-public :: qg_error_covariance_setup,qg_error_covariance_delete,qg_error_covariance_mult, &
-        & qg_error_covariance_randomize
+public :: qg_error_covariance_setup,qg_error_covariance_delete,qg_error_covariance_mult,qg_error_covariance_randomize
+! ------------------------------------------------------------------------------
+real(kind_real),parameter :: eps_ad = 1.0e-10 !< Epsilon value for adjoint tests
 ! ------------------------------------------------------------------------------
 type :: qg_error_covariance_config
-  integer :: nx                                      !< Number of points in the zonal direction
-  integer :: ny                                      !< Number of points in the meridional direction
-  integer :: nz                                      !< Number of vertical levels
-  real(kind_real) :: sigma                           !< Standard deviation
-  real(kind_real),allocatable :: sqrt_zonal(:)       !< Spectral weights for the spectral of the zonal correlation matrix
-  real(kind_real),allocatable :: sqrt_merid(:,:)     !< Square-root of the meridional correlation matrix
-  real(kind_real),allocatable :: sqrt_vert(:,:)      !< Square-root of the meridional correlation matrix
-  real(kind_real),allocatable :: norm(:,:)           !< Normalization factor
-  integer :: seed                                    !< Randomization seed
+  integer :: nx                                  !< Number of points in the zonal direction
+  integer :: ny                                  !< Number of points in the meridional direction
+  integer :: nz                                  !< Number of vertical levels
+  real(kind_real),allocatable :: sigmas(:)       !< Standard deviations
+  real(kind_real),allocatable :: sqrt_zonal(:)   !< Spectral weights for the spectral of the zonal correlation matrix
+  real(kind_real),allocatable :: sqrt_merid(:,:) !< Square-root of the meridional correlation matrix
+  real(kind_real),allocatable :: sqrt_vert(:,:)  !< Square-root of the meridional correlation matrix
+  real(kind_real),allocatable :: norm(:,:)       !< Normalization factor
+  integer :: seed                                !< Randomization seed
 end type qg_error_covariance_config
-
-real(kind_real),parameter :: eps_ad = 1.0e-10 !< Epsilon value for adjoint tests
 
 #define LISTED_TYPE qg_error_covariance_config
 
@@ -69,8 +68,8 @@ type(qg_geom),intent(in) :: geom                       !< Geometry
 
 ! Local variables
 integer :: ix,iy,jy,ky,iz,jz,kz,info
-real(kind_real) :: horizontal_length_scale,vertical_length_scale
-real(kind_real) :: distx,condition_number,threshold
+real(kind_real) :: horizontal_length_scale,vertical_length_scale,attenuation_length
+real(kind_real) :: distx,disty,condition_number,threshold,sigma
 real(kind_real),allocatable :: struct_fn(:),workx(:)
 real(kind_real),allocatable :: evalsy(:),worky(:),evectsy(:,:),revalsy(:)
 real(kind_real),allocatable :: evalsz(:),workz(:),evectsz(:,:),revalsz(:)
@@ -80,15 +79,23 @@ type(qg_fields) :: fld_in,fld_out
 type(oops_variables) :: vars
 
 ! Get parameters
-call f_conf%get_or_die("standard_deviation",self%sigma)
+call f_conf%get_or_die("standard_deviation",sigma)
 call f_conf%get_or_die("horizontal_length_scale",horizontal_length_scale)
 call f_conf%get_or_die("vertical_length_scale",vertical_length_scale)
 call f_conf%get_or_die("maximum_condition_number",condition_number)
 if (f_conf%has("randomization_seed")) then
-   call f_conf%get_or_die("randomization_seed",self%seed)
+  call f_conf%get_or_die("randomization_seed",self%seed)
 else
-   self%seed = rseed
+  self%seed = rseed
 end if
+if (f_conf%has("attenuation_length")) then
+  call f_conf%get_or_die("attenuation_length",attenuation_length)
+else
+  attenuation_length = 0.0
+end if
+
+!write(record,*) 'qg_error_covariance_setup: attenuation_length=',attenuation_length
+!call fckit_log%info(record)
 
 ! Check nx
 if (mod(geom%nx,2)/=0) then
@@ -103,6 +110,7 @@ self%ny = geom%ny
 self%nz = geom%nz
 
 ! Allocation
+allocate(self%sigmas(geom%ny))
 allocate(self%sqrt_merid(geom%ny,geom%ny))
 allocate(self%sqrt_vert(geom%nz,geom%nz))
 allocate(self%norm(geom%ny,geom%nz))
@@ -119,6 +127,18 @@ allocate(workz((geom%nz+3)*geom%nz))
 allocate(revalsz(geom%nz))
 allocate(norm(geom%ny,geom%nz))
 
+! Calculate standard deviations with attenuation to zero near north
+! and south boundaries.
+self%sigmas(:)=sigma
+if (attenuation_length.ne.0.0) then
+  do iy=1,geom%ny
+    disty = min(geom%y(iy)-ymin,ymax-geom%y(iy))
+    self%sigmas(iy) = self%sigmas(iy)*min(1.0,disty/attenuation_length)
+    !write(record,*) 'qg_error_covariance_setup: sigma=',self%sigmas(iy),' at iy=',iy
+    !call fckit_log%info(record)
+  enddo
+endif
+
 ! Calculate spectral weights for zonal correlations:
 ! First we construct the structure function in grid space and FFT it
 do ix=1,geom%nx
@@ -129,7 +149,7 @@ enddo
 call fft_fwd(geom%nx,struct_fn,workx)
 workx = workx/real(geom%nx,kind_real)
 
-! We are after sqrt(B) or sqrt(Q),so square-root the coefficents.
+! We are after sqrt(B) or sqrt(Q), so square-root the coefficents.
 ! The factor N ensures we get the struture function back if we apply
 ! B or Q to a unit delta function.
 threshold = 0.0
@@ -217,7 +237,9 @@ do iz=1,geom%nz
     norm(iy,iz) = 1.0/sqrt(fld_out%x(1,iy,iz))
   end do
 end do
-self%norm = norm*self%sigma
+do iy=1,geom%ny
+  self%norm(iy,:) = norm(iy,:)*self%sigmas(iy)
+enddo
 
 ! Release memory
 deallocate(struct_fn)
@@ -415,7 +437,7 @@ type(qg_fields),intent(in) :: fld_in                !< Input field
 type(qg_fields),intent(inout) :: fld_out            !< Output field
 
 ! Local variables
-integer :: ix
+integer :: ix,iy
 
 ! Check input/output
 if (.not.allocated(fld_in%x)) call abor1_ftn("qg_error_covariance_sqrt_mult: x required as input")
@@ -441,7 +463,9 @@ end do
 !$omp end parallel do
 
 ! Multiply by standard deviation
-fld_out%x = fld_out%x*self%sigma
+do iy=1,fld_out%geom%ny
+  fld_out%x(:,iy,:) = fld_out%x(:,iy,:)*self%sigmas(iy)
+enddo
 
 end subroutine qg_error_covariance_sqrt_mult
 ! ------------------------------------------------------------------------------
@@ -456,7 +480,7 @@ type(qg_fields),intent(in) :: fld_in                !< Input field
 type(qg_fields),intent(inout) :: fld_out            !< Output field
 
 ! Local variables
-integer :: ix
+integer :: ix,iy
 
 ! Check input/output
 if (.not.allocated(fld_in%x)) call abor1_ftn("qg_error_covariance_sqrt_mult: x required as input")
@@ -466,7 +490,9 @@ if (.not.allocated(fld_out%x)) call abor1_ftn("qg_error_covariance_sqrt_mult: x 
 call qg_fields_copy(fld_out,fld_in)
 
 ! Multiply by standard deviation
-fld_out%x = fld_out%x*self%sigma
+do iy=1,fld_out%geom%ny
+  fld_out%x(:,iy,:) = fld_out%x(:,iy,:)*self%sigmas(iy)
+enddo
 
 ! Multiply by normalization factor
 !$omp parallel do schedule(static) private(ix)

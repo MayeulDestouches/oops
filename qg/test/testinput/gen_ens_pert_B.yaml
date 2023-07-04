@@ -8,7 +8,7 @@ background error:
 forecast length: P1DT12H
 initial condition:
   date: 2009-12-31T00:00:00Z
-  filename: Data/truth.fc.2009-12-15T00:00:00Z.P16D.nc
+  filename: Data/truth.fc.2009-12-31T00:00:00Z.PT0S.nc
 members: 10
 model:
   name: QG
@@ -21,10 +21,11 @@ output:
   frequency: PT1H
   type: ens
 geometry:
-  nx: 40
-  ny: 20
+  nx: 60
+  ny: 19
   depths: [4500.0, 5500.0]
 perturbed variables: [x]
 
 test:
   reference filename: testoutput/gen_ens_pert_B.test
+  test output filename: testoutput/gen_ens_pert_B.log.out

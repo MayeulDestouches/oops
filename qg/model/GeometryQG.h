@@ -18,10 +18,14 @@
 
 #include "atlas/field.h"
 #include "atlas/functionspace.h"
+#include "atlas/projection.h"
 
 #include "eckit/mpi/Comm.h"
 
+#include "oops/mpi/mpi.h"
+
 #include "oops/util/ObjectCounter.h"
+#include "oops/util/parameters/OptionalParameter.h"
 #include "oops/util/parameters/Parameter.h"
 #include "oops/util/parameters/Parameters.h"
 #include "oops/util/parameters/RequiredParameter.h"
@@ -40,13 +44,17 @@ class GeometryQgParameters : public oops::Parameters {
   OOPS_CONCRETE_PARAMETERS(GeometryQgParameters, Parameters)
 
  public:
-  /// Domain size
-  oops::RequiredParameter<int> nx{"nx", this};
-  oops::RequiredParameter<int> ny{"ny", this};
+  /// Number of cells
+  oops::Parameter<int> nx{"nx", 60, this};
+  oops::Parameter<int> ny{"ny", 19, this};
   /// Depths
-  oops::RequiredParameter<std::vector<float>> depths{"depths", this};
+  oops::OptionalParameter<std::vector<double>> depths{"depths", this};
   /// Heating option (AS: should it be in geometry or model?)
   oops::Parameter<bool> heating{"heating", true, this};
+    /// Modified QG option
+  oops::Parameter<float> perturbedheat{"perturbed heating", 1.0, this};
+  /// Interpolation option
+  oops::Parameter<std::string> interpolator{"interpolator", "trilinear", this};
 };
 
 class GeometryQGIterator;
@@ -61,7 +69,8 @@ class GeometryQG : public util::Printable,
 
   static const std::string classname() {return "qg::GeometryQG";}
 
-  GeometryQG(const GeometryQgParameters &, const eckit::mpi::Comm &);
+  GeometryQG(const GeometryQgParameters &,
+             const eckit::mpi::Comm & comm = oops::mpi::world());
   GeometryQG(const GeometryQG &);
   ~GeometryQG();
 
@@ -71,6 +80,7 @@ class GeometryQG : public util::Printable,
   GeometryQGIterator end() const;
   std::vector<double> verticalCoord(std::string &) const;
   const eckit::mpi::Comm & getComm() const {return comm_;}
+  atlas::Grid * atlasGrid() const {return atlasGrid_.get();}
   atlas::FunctionSpace * atlasFunctionSpace() const {return atlasFunctionSpace_.get();}
   atlas::FieldSet * atlasFieldSet() const {return atlasFieldSet_.get();}
   size_t levels() const {return levs_;}
@@ -82,7 +92,9 @@ class GeometryQG : public util::Printable,
   void print(std::ostream &) const;
   F90geom keyGeom_;
   const eckit::mpi::Comm & comm_;
-  std::unique_ptr<atlas::functionspace::PointCloud> atlasFunctionSpace_;
+  std::unique_ptr<atlas::StructuredGrid> atlasGrid_;
+  std::unique_ptr<atlas::Projection> atlasProjection_;
+  std::unique_ptr<atlas::functionspace::StructuredColumns> atlasFunctionSpace_;
   std::unique_ptr<atlas::FieldSet> atlasFieldSet_;
   size_t levs_;
 };

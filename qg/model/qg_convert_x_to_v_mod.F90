@@ -33,10 +33,14 @@ integer :: iz
 
 !$omp parallel do schedule(static) private(iz)
 do iz=1,geom%nz
-   v(1:geom%nx-1,:,iz) = 0.5*x(2:geom%nx,:,iz)/geom%deltax
-   v(geom%nx,:,iz) = 0.5*x(1,:,iz)/geom%deltax
-   v(2:geom%nx,:,iz) = v(2:geom%nx,:,iz)-0.5*x(1:geom%nx-1,:,iz)/geom%deltax
-   v(1,:,iz) = v(1,:,iz)-0.5*x(geom%nx,:,iz)/geom%deltax
+   ! West side (perdiodic)
+   v(1,:,iz) = (x(2,:,iz)-x(geom%nx,:,iz))/(2.0_kind_real*geom%deltax)
+
+   ! Center
+   v(2:geom%nx-1,:,iz) = (x(3:geom%nx,:,iz)-x(1:geom%nx-2,:,iz))/(2.0_kind_real*geom%deltax)
+
+   ! East side (periodic)
+   v(geom%nx,:,iz) = (x(1,:,iz)-x(geom%nx-1,:,iz))/(2.0_kind_real*geom%deltax)
 enddo
 !$omp end parallel do
 
@@ -57,10 +61,14 @@ integer :: iz
 
 !$omp parallel do schedule(static) private(iz)
 do iz=1,geom%nz
-   v(1:geom%nx-1,:,iz) = 0.5*x(2:geom%nx,:,iz)/geom%deltax
-   v(geom%nx,:,iz) = 0.5*x(1,:,iz)/geom%deltax
-   v(2:geom%nx,:,iz) = v(2:geom%nx,:,iz)-0.5*x(1:geom%nx-1,:,iz)/geom%deltax
-   v(1,:,iz) = v(1,:,iz)-0.5*x(geom%nx,:,iz)/geom%deltax
+   ! West side (perdiodic)
+   v(1,:,iz) = (x(2,:,iz)-x(geom%nx,:,iz))/(2.0_kind_real*geom%deltax)
+
+   ! Center
+   v(2:geom%nx-1,:,iz) = (x(3:geom%nx,:,iz)-x(1:geom%nx-2,:,iz))/(2.0_kind_real*geom%deltax)
+
+   ! East side (periodic)
+   v(geom%nx,:,iz) = (x(1,:,iz)-x(geom%nx-1,:,iz))/(2.0_kind_real*geom%deltax)
 enddo
 !$omp end parallel do
 
@@ -80,10 +88,17 @@ real(kind_real),intent(inout)  :: x(geom%nx,geom%ny,geom%nz) !< Streamfunction
 integer :: iz
 
 do iz=1,geom%nz
-   x(geom%nx,:,iz) = x(geom%nx,:,iz)-0.5/geom%deltax*v(1,:,iz)
-   x(1:geom%nx-1,:,iz) = x(1:geom%nx-1,:,iz)-0.5/geom%deltax*v(2:geom%nx,:,iz)
-   x(1,:,iz) = x(1,:,iz)+0.5/geom%deltax*v(geom%nx,:,iz)
-   x(2:geom%nx,:,iz) = x(2:geom%nx,:,iz)+0.5/geom%deltax*v(1:geom%nx-1,:,iz)
+   ! West side (perdiodic)
+   x(2,:,iz) = x(2,:,iz)+v(1,:,iz)/(2.0_kind_real*geom%deltax)
+   x(geom%nx,:,iz) = x(geom%nx,:,iz)-v(1,:,iz)/(2.0_kind_real*geom%deltax)
+
+   ! Center
+   x(3:geom%nx,:,iz) = x(3:geom%nx,:,iz)+v(2:geom%nx-1,:,iz)/(2.0_kind_real*geom%deltax)
+   x(1:geom%nx-2,:,iz) = x(1:geom%nx-2,:,iz)-v(2:geom%nx-1,:,iz)/(2.0_kind_real*geom%deltax)
+
+   ! East side (periodic)
+   x(1,:,iz) = x(1,:,iz)+v(geom%nx,:,iz)/(2.0_kind_real*geom%deltax)
+   x(geom%nx-1,:,iz) = x(geom%nx-1,:,iz)-v(geom%nx,:,iz)/(2.0_kind_real*geom%deltax)
 enddo
 
 end subroutine convert_x_to_v_ad

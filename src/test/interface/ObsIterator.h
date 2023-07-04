@@ -72,7 +72,8 @@ template <typename OBS> void testBasic() {
     double lon1 = Test_::config(jj).getDouble("obs iterator test.lon1");
     double lat1 = Test_::config(jj).getDouble("obs iterator test.lat1");
     const eckit::geometry::Point3 point1(lon1, lat1, 0.0);
-
+    oops::Log::debug() << "Point 1 " << std::setprecision(9) << point1 << std::endl;
+    oops::Log::debug() << "Iter1 " << std::setprecision(9) << *iter1 << std::endl;
     EXPECT((*iter1).distance(point1) <= tol);
 
     // test that the point after begin() is the same as reference
@@ -80,6 +81,8 @@ template <typename OBS> void testBasic() {
     double lon2 = Test_::config(jj).getDouble("obs iterator test.lon2");
     double lat2 = Test_::config(jj).getDouble("obs iterator test.lat2");
     const eckit::geometry::Point3 point2(lon2, lat2, 0.0);
+    oops::Log::debug() << "Point 2 " << std::setprecision(9) << point2 << std::endl;
+    oops::Log::debug() << "Iter1 " << std::setprecision(9) << *iter1 << std::endl;
     EXPECT((*iter1).distance(point2) <= tol);
   }
 }

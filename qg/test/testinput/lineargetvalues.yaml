@@ -1,6 +1,6 @@
-geometry:
-  nx: 40
-  ny: 20
+geometry: &geometry
+  nx: 60
+  ny: 19
   depths: [4500.0, 5500.0]
 state variables: [x]
 linear getvalues test:
@@ -13,9 +13,10 @@ locations:
   window begin: 2010-01-01T00:00:00Z
   window end: 2010-01-02T00:00:00Z
   nrandom: 8
+  geometry: *geometry
   lons: [-10.0, 12.0]
   lats: [35.0, 45.0]
   z: [5000, 9000]
 background:
   date: 2009-12-31T00:00:00Z
-  filename: Data/truth.fc.2009-12-15T00:00:00Z.P16D.nc
+  filename: Data/truth.fc.2009-12-31T00:00:00Z.PT0S.nc

@@ -8,7 +8,7 @@
 
 module qg_gom_mod
 
-use atlas_module, only: atlas_field
+use atlas_module
 use fckit_configuration_module, only: fckit_configuration
 use fckit_log_module, only: fckit_log
 use iso_c_binding
@@ -19,7 +19,6 @@ use oops_variables_mod
 use qg_constants_mod
 use qg_geom_mod
 use qg_locs_mod
-use qg_projection_mod
 use qg_tools_mod
 use random_mod
 
@@ -29,19 +28,19 @@ public :: qg_gom
 public :: qg_gom_registry
 public :: qg_gom_setup,qg_gom_alloc,qg_gom_delete,qg_gom_copy,qg_gom_zero,qg_gom_abs,qg_gom_random,qg_gom_mult, &
         & qg_gom_add,qg_gom_diff,qg_gom_schurmult,qg_gom_divide,qg_gom_rms,qg_gom_dotprod,qg_gom_stats,qg_gom_maxloc, &
-        & qg_gom_read_file, qg_gom_write_file,qg_gom_analytic_init
+        & qg_gom_read_file,qg_gom_write_file,qg_gom_analytic_init
 ! ------------------------------------------------------------------------------
 type :: qg_gom
-  integer :: nobs                               !< Number of observations
-  real(kind_real), pointer :: x(:,:) => null()  !< Streamfunction observations values
-  real(kind_real), pointer :: q(:,:) => null()  !< Potential vorticity observations values
-  real(kind_real), pointer :: u(:,:) => null()  !< Zonal wind observations values
-  real(kind_real), pointer :: v(:,:) => null()  !< Meridian wind observations values
-  real(kind_real), pointer :: z(:,:) => null()  !< Height values
-  logical :: lalloc = .false.                   !< Allocation flag
-  type(oops_variables) :: vars                  !< Variables
-  type(qg_locs) :: locs                         !< Locations of obs
-  integer :: levs                               !< Number of levels
+  integer :: nobs                              !< Number of observations
+  real(kind_real),pointer :: x(:,:) => null()  !< Streamfunction observations values
+  real(kind_real),pointer :: q(:,:) => null()  !< Potential vorticity observations values
+  real(kind_real),pointer :: u(:,:) => null()  !< Zonal wind observations values
+  real(kind_real),pointer :: v(:,:) => null()  !< Meridian wind observations values
+  real(kind_real),pointer :: z(:,:) => null()  !< Height values
+  logical :: lalloc = .false.                  !< Allocation flag
+  type(oops_variables) :: vars                 !< Variables
+  type(qg_locs) :: locs                        !< Locations of obs
+  integer :: levs                              !< Number of levels
 end type qg_gom
 
 #define LISTED_TYPE qg_gom
@@ -66,33 +65,41 @@ implicit none
 
 ! Passed variables
 type(qg_gom),intent(inout) :: self      !< GOM
-type(qg_locs), intent(in)  :: locs      !< Locations of obs
-type(oops_variables), intent(in) :: vars
-integer(c_int),intent(in)  :: levs
+type(qg_locs),intent(in)  :: locs       !< Locations of obs
+type(oops_variables),intent(in) :: vars !< Variables
+integer,intent(in)  :: levs             !< Number of levels
 
 ! Set attributes
 self%vars = vars
-call locs_copy(self%locs, locs)
+call locs_copy(self%locs,locs)
 
-call qg_gom_alloc(self, locs%nlocs(), levs)
+! Allocation
+call qg_gom_alloc(self,locs%nlocs(),levs)
 
 end subroutine qg_gom_setup
 ! ------------------------------------------------------------------------------
 !> Setup GOM
-subroutine qg_gom_alloc(self, nobs, levs)
+subroutine qg_gom_alloc(self,nobs,levs)
 
 implicit none
-type(qg_gom),intent(inout) :: self      !< GOM
-integer, intent(in) :: nobs
-integer, intent(in) :: levs
 
+! Passed variables
+type(qg_gom),intent(inout) :: self !< GOM
+integer,intent(in) :: nobs         !< Number of observations
+integer,intent(in) :: levs         !< Number of levels
+
+! Copy sizes
 self%levs=levs
 self%nobs=nobs
-if (self%vars%has('x')) allocate(self%x(self%levs, self%nobs))
-if (self%vars%has('q')) allocate(self%q(self%levs, self%nobs))
-if (self%vars%has('u')) allocate(self%u(self%levs, self%nobs))
-if (self%vars%has('v')) allocate(self%v(self%levs, self%nobs))
-if (self%vars%has('z')) allocate(self%z(self%levs, self%nobs))
+
+! Allocation
+if (self%vars%has('x')) allocate(self%x(self%levs,self%nobs))
+if (self%vars%has('q')) allocate(self%q(self%levs,self%nobs))
+if (self%vars%has('u')) allocate(self%u(self%levs,self%nobs))
+if (self%vars%has('v')) allocate(self%v(self%levs,self%nobs))
+if (self%vars%has('z')) allocate(self%z(self%levs,self%nobs))
+
+! Set allocation flag
 self%lalloc = .true.
 
 end subroutine qg_gom_alloc
@@ -111,6 +118,8 @@ if (associated(self%q)) deallocate(self%q)
 if (associated(self%u)) deallocate(self%u)
 if (associated(self%v)) deallocate(self%v)
 if (associated(self%z)) deallocate(self%z)
+
+! Reset allocation flag
 self%lalloc = .false.
 
 end subroutine qg_gom_delete
@@ -121,8 +130,8 @@ subroutine qg_gom_copy(self,other)
 implicit none
 
 ! Passed variables
-type(qg_gom),intent(inout) :: self            !< GOM
-type(qg_gom),intent(in) :: other              !< Other GOM
+type(qg_gom),intent(inout) :: self !< GOM
+type(qg_gom),intent(in) :: other   !< Other GOM
 
 ! Copy attributes
 self%nobs = other%nobs
@@ -131,11 +140,11 @@ self%vars = other%vars
 
 ! Allocation
 if (.not.self%lalloc) then
-  if (self%vars%has('x')) allocate(self%x(self%levs, self%nobs))
-  if (self%vars%has('q')) allocate(self%q(self%levs, self%nobs))
-  if (self%vars%has('u')) allocate(self%u(self%levs, self%nobs))
-  if (self%vars%has('v')) allocate(self%v(self%levs, self%nobs))
-  if (self%vars%has('z')) allocate(self%z(self%levs, self%nobs))
+  if (self%vars%has('x')) allocate(self%x(self%levs,self%nobs))
+  if (self%vars%has('q')) allocate(self%q(self%levs,self%nobs))
+  if (self%vars%has('u')) allocate(self%u(self%levs,self%nobs))
+  if (self%vars%has('v')) allocate(self%v(self%levs,self%nobs))
+  if (self%vars%has('z')) allocate(self%z(self%levs,self%nobs))
   self%lalloc = .true.
 endif
 
@@ -192,12 +201,14 @@ type(qg_gom),intent(inout) :: self !< GOM
 integer :: nv
 real(kind_real),allocatable :: values(:,:,:)
 
-! TODO(Benjamin): change that in a following PR
+! Compute number of values
 nv = 0
 if (self%vars%has('x')) nv = nv+1
 if (self%vars%has('q')) nv = nv+1
 if (self%vars%has('u')) nv = nv+1
 if (self%vars%has('v')) nv = nv+1
+
+! Allocation
 allocate(values(nv,self%levs,self%nobs))
 
 ! Generate random GOM values
@@ -303,7 +314,7 @@ type(qg_gom),intent(in) :: other   !< Other GOM
 
 ! Local variables
 real(kind_real) :: tol
-integer :: jloc, jlev
+integer :: jloc,jlev
 
 ! Set tolerance
 tol = epsilon(tol)
@@ -416,11 +427,11 @@ subroutine qg_gom_stats(self,kobs,pmin,pmax,prms)
 implicit none
 
 ! Passed variables
-type(qg_gom),intent(inout) :: self       !< GOM
-integer,intent(inout) :: kobs            !< Number of observations
-real(kind_real),intent(inout) :: pmin    !< Minimum value
-real(kind_real),intent(inout) :: pmax    !< Maximum value
-real(kind_real),intent(inout) :: prms    !< RMS
+type(qg_gom),intent(inout) :: self    !< GOM
+integer,intent(inout) :: kobs         !< Number of observations
+real(kind_real),intent(inout) :: pmin !< Minimum value
+real(kind_real),intent(inout) :: pmax !< Maximum value
+real(kind_real),intent(inout) :: prms !< RMS
 
 ! Local variables
 integer :: nv
@@ -532,7 +543,7 @@ implicit none
 
 ! Passed variables
 type(qg_gom),intent(inout) :: self             !< GOM
-type(oops_variables), intent(in) :: vars
+type(oops_variables),intent(in) :: vars        !< Variables
 type(fckit_configuration),intent(in) :: f_conf !< FCKIT configuration
 
 ! Local variables
@@ -558,7 +569,7 @@ call ncerr(nf90_inquire_dimension(ncid,nlev_id,len=levs))
 
 ! GOM setup
 self%vars = vars
-call qg_gom_alloc(self, nobs, levs)
+call qg_gom_alloc(self,nobs,levs)
 
 ! Get variables ids
 if (self%vars%has('x')) call ncerr(nf90_inq_varid(ncid,'x',x_id))
@@ -585,7 +596,7 @@ subroutine qg_gom_write_file(self,f_conf)
 implicit none
 
 ! Passed variables
-type(qg_gom),intent(inout) :: self !< GOM
+type(qg_gom),intent(inout) :: self             !< GOM
 type(fckit_configuration),intent(in) :: f_conf !< FCKIT configuration
 
 ! Local variables
@@ -631,7 +642,7 @@ call ncerr(nf90_close(ncid))
 end subroutine qg_gom_write_file
 ! ------------------------------------------------------------------------------
 !> GOM analytic initialization
-subroutine qg_gom_analytic_init(self,locs,f_conf)
+subroutine qg_gom_analytic_init(self,locs,f_conf,geom)
 
 implicit none
 
@@ -639,6 +650,7 @@ implicit none
 type(qg_gom),intent(inout) :: self             !< GOM
 type(qg_locs),intent(inout) :: locs            !< Locations
 type(fckit_configuration),intent(in) :: f_conf !< FCKIT configuration
+type(qg_geom),intent(in) :: geom               !< Geometry
 
 ! Local variables
 integer :: iloc,ilev,iz,nz
@@ -650,27 +662,10 @@ real(kind_real), allocatable :: depths(:)
 type(atlas_field) :: lonlat_field
 real(kind_real) :: z(self%levs)
 
-! Get depths
-!nz = f_conf%get_size("depths")
-!if (nz /= self%levs) call abor1_ftn('qg_gom_analytic init: wrong number of levels')
-!allocate(depths(nz))
-!call f_conf%get_or_die("depths",depths)
+! Check number of levels
+if (geom%nz /= self%levs) call abor1_ftn('qg_gom_analytic init: wrong number of levels')
 
-! Should get depths from yaml as above, however, since the GetValues is going to be
-! re-writen it is not worth spending the time getting it through the Parameters now.
-! Values are from the geometry section of getvalues.yaml
-nz = 2
-allocate(depths(nz))
-depths(1) = 4500.0
-depths(2) = 5500.0
-
-! Set heights
-z(1) = 0.5*depths(1)
-do iz=2,nz
-  z(iz) = sum(depths(1:iz-1))+0.5*depths(iz)
-end do
-
-! get locations
+! Get locations
 lonlat_field = locs%lonlat()
 call lonlat_field%data(lonlat)
 
@@ -687,27 +682,27 @@ do iloc=1,locs%nlocs()
   select case (trim(ic))
   case ('baroclinic-instability')
     ! Go to cartesian coordinates
-    call lonlat_to_xy(lonlat(1,iloc),lonlat(2,iloc),x,y)
+    call geom%aproj%lonlat2xy(lonlat(1,iloc),lonlat(2,iloc),x,y)
 
     ! Compute values for baroclinic instability
-    if (self%vars%has('x')) call baroclinic_instability(x,y,z(ilev),'x',self%x(ilev,iloc))
-    if (self%vars%has('q')) call baroclinic_instability(x,y,z(ilev),'q',self%q(ilev,iloc))
-    if (self%vars%has('u')) call baroclinic_instability(x,y,z(ilev),'u',self%u(ilev,iloc))
-    if (self%vars%has('v')) call baroclinic_instability(x,y,z(ilev),'v',self%v(ilev,iloc))
+    if (self%vars%has('x')) call baroclinic_instability(y,geom%z(ilev),'x',self%x(ilev,iloc))
+    if (self%vars%has('q')) call baroclinic_instability(y,geom%z(ilev),'q',self%q(ilev,iloc))
+    if (self%vars%has('u')) call baroclinic_instability(y,geom%z(ilev),'u',self%u(ilev,iloc))
+    if (self%vars%has('v')) call baroclinic_instability(y,geom%z(ilev),'v',self%v(ilev,iloc))
   case ('large-vortices')
     ! Go to cartesian coordinates
-    call lonlat_to_xy(lonlat(1,iloc),lonlat(2,iloc),x,y)
+    call geom%aproj%lonlat2xy(lonlat(1,iloc),lonlat(2,iloc),x,y)
 
     ! Compute values for large vortices
-    if (self%vars%has('x')) call large_vortices(x,y,z(ilev),'x',self%x(ilev,iloc))
-    if (self%vars%has('q')) call large_vortices(x,y,z(ilev),'q',self%q(ilev,iloc))
-    if (self%vars%has('u')) call large_vortices(x,y,z(ilev),'u',self%u(ilev,iloc))
-    if (self%vars%has('v')) call large_vortices(x,y,z(ilev),'v',self%v(ilev,iloc))
+    if (self%vars%has('x')) call large_vortices(x,y,geom%z(ilev),'x',self%x(ilev,iloc))
+    if (self%vars%has('q')) call large_vortices(x,y,geom%z(ilev),'q',self%q(ilev,iloc))
+    if (self%vars%has('u')) call large_vortices(x,y,geom%z(ilev),'u',self%u(ilev,iloc))
+    if (self%vars%has('v')) call large_vortices(x,y,geom%z(ilev),'v',self%v(ilev,iloc))
   case default
     call abor1_ftn('qg_gom_analytic_init: unknown initialization')
   endselect
  enddo
- self%z(:,iloc) = z(:)
+ self%z(:,iloc) = geom%z(:)
 enddo
 
 call lonlat_field%final()

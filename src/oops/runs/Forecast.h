@@ -12,6 +12,8 @@
 #ifndef OOPS_RUNS_FORECAST_H_
 #define OOPS_RUNS_FORECAST_H_
 
+#include <chrono>
+#include <ctime>
 #include <string>
 
 #include "oops/base/ForecastParameters.h"
@@ -91,8 +93,14 @@ template <typename MODEL> class Forecast : public Application {
     post.enrollProcessor(new StateWriter<State_>(params.fcstConf.output));
 
 //  Run forecast
+    auto start = std::chrono::system_clock::now();
     model.forecast(xx, moderr, fclength, post);
+    auto end = std::chrono::system_clock::now();
 
+    std::chrono::duration<double> elapsed_seconds = end-start;
+
+    Log::info() << "Elapsed time for forecasts: " << elapsed_seconds.count()
+                << "s" << std::endl;
     Log::test() << "Final state: " << xx << std::endl;
 
     return 0;

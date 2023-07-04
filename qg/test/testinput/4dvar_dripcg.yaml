@@ -4,12 +4,12 @@ cost function:
   window length: PT24H
   analysis variables: [x]
   geometry:
-    nx: 40
-    ny: 20
+    nx: 60
+    ny: 19
     depths: [4500.0, 5500.0]
   model:
     name: QG
-    tstep: PT15M
+    tstep: PT1H
   background:
     date: 2010-01-01T00:00:00Z
     filename: Data/forecast.fc.2009-12-31T00:00:00Z.P1D.nc
@@ -63,12 +63,12 @@ variational:
   - gradient norm reduction: 1.0e-10
     ninner: 10
     geometry:
-      nx: 40
-      ny: 20
+      nx: 60
+      ny: 19
       depths: [4500.0, 5500.0]
     linear model:
       trajectory:
-        tstep: PT30M
+        tstep: PT1H
       tstep: PT1H
       variable change: Identity
       name: QgTLM
@@ -78,12 +78,12 @@ variational:
   - gradient norm reduction: 1.0e-10
     ninner: 15
     geometry:
-      nx: 40
-      ny: 20
+      nx: 60
+      ny: 19
       depths: [4500.0, 5500.0]
     linear model:
       trajectory:
-        tstep: PT30M
+        tstep: PT1H
       tstep: PT1H
       variable change: Identity
       name: QgTLM
@@ -102,3 +102,4 @@ output:
 
 test:
   reference filename: testoutput/4dvar_dripcg.test
+  test output filename: testoutput/4dvar_dripcg.log.out

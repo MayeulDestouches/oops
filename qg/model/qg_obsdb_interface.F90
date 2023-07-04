@@ -163,8 +163,8 @@ implicit none
 integer(c_int),intent(in) :: c_key_self                  !< Observation data
 integer(c_int),intent(in) :: lgrp                        !< Group size
 character(kind=c_char,len=1),intent(in) :: c_grp(lgrp+1) !< Group name
-type(c_ptr), intent(in), value :: c_fields               !< Locations fieldset
-type(c_ptr), intent(in), value :: c_times                !< times
+type(c_ptr),intent(in),value :: c_fields                 !< Locations fieldset
+type(c_ptr),intent(in),value :: c_times                  !< times
 
 ! Local variables
 type(qg_obsdb),pointer :: self
@@ -184,7 +184,7 @@ call fields%final()
 end subroutine qg_obsdb_locations_c
 ! ------------------------------------------------------------------------------
 !> Generate observation data
-subroutine qg_obsdb_generate_c(c_key_self,lgrp,c_grp,c_conf,c_bgn,c_step,ktimes,kobs) bind(c,name='qg_obsdb_generate_f90')
+subroutine qg_obsdb_generate_c(c_key_self,lgrp,c_grp,c_conf,c_bgn,c_step,ktimes) bind(c,name='qg_obsdb_generate_f90')
 
 implicit none
 
@@ -196,9 +196,8 @@ type(c_ptr),value,intent(in) :: c_conf                   !< Configuration
 type(c_ptr),value,intent(in) :: c_bgn                    !< Start time
 type(c_ptr),value,intent(in) :: c_step                   !< Time-step
 integer(c_int),intent(in) :: ktimes                      !< Number of time-slots
-integer(c_int),intent(inout) :: kobs                     !< Number of observations
 
-! Mocal variables
+! Local variables
 type(fckit_configuration) :: f_conf
 type(qg_obsdb),pointer :: self
 character(len=lgrp) :: grp
@@ -213,7 +212,7 @@ call c_f_datetime(c_bgn,bgn)
 call c_f_duration(c_step,step)
 
 ! Call Fortran
-call qg_obsdb_generate(self,grp,f_conf,bgn,step,ktimes,kobs)
+call qg_obsdb_generate(self,grp,f_conf,bgn,step,ktimes)
 
 end subroutine qg_obsdb_generate_c
 ! ------------------------------------------------------------------------------

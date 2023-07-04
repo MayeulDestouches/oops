@@ -22,6 +22,9 @@ foreach(FILENAME ${coupled_testinput})
            ${CMAKE_CURRENT_BINARY_DIR}/${FILENAME} )
 endforeach(FILENAME)
 
+# Create directory for test outputs
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testoutput)
+
 # Create directory for test references and symlink all files
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testref)
 foreach(FILENAME ${coupled_testref})

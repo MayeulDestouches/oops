@@ -1,6 +1,6 @@
 geometry:
-  nx: 40
-  ny: 20
+  nx: 60
+  ny: 19
   depths: [4500.0, 5500.0]
 background:
   members:
@@ -24,3 +24,4 @@ factor: 0.5
 
 test:
   reference filename: testoutput/rtpp.test
+  test output filename: testoutput/rtpp.log.out

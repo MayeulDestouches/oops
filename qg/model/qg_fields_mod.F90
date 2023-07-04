@@ -12,7 +12,7 @@ use atlas_module, only: atlas_field, atlas_fieldset, atlas_real
 use fckit_configuration_module, only: fckit_configuration
 use datetime_mod
 use duration_mod
-use fckit_log_module,only: fckit_log
+use fckit_log_module, only: fckit_log
 use iso_c_binding
 use kinds
 use missing_values_mod
@@ -186,7 +186,7 @@ subroutine qg_fields_zero(self)
 implicit none
 
 ! Passed variables
-type(qg_fields),intent(inout) :: self
+type(qg_fields),intent(inout) :: self !< Fields
 
 ! Check field
 call qg_fields_check(self)
@@ -211,7 +211,7 @@ subroutine qg_fields_ones(self)
 implicit none
 
 ! Passed variables
-type(qg_fields),intent(inout) :: self
+type(qg_fields),intent(inout) :: self !< Fields
 
 ! Check field
 call qg_fields_check(self)
@@ -333,8 +333,8 @@ subroutine qg_fields_copy(self,other)
 implicit none
 
 ! Passed variables
-type(qg_fields),intent(inout) :: self   !< Fields
-type(qg_fields),intent(in)    :: other  !< Other fields
+type(qg_fields),intent(inout) :: self  !< Fields
+type(qg_fields),intent(in)    :: other !< Other fields
 
 ! Check resolution
 call qg_fields_check_resolution(self,other)
@@ -357,7 +357,7 @@ implicit none
 
 ! Passed variables
 type(qg_fields),intent(inout) :: self  !< Fields
-type(qg_fields),intent(in)    :: other !< Other fields
+type(qg_fields),intent(in) :: other    !< Other fields
 
 ! Check resolution
 call qg_fields_check_resolution(self,other)
@@ -411,7 +411,7 @@ implicit none
 
 ! Passed variables
 type(qg_fields),intent(inout) :: self !< Fields
-type(qg_fields),intent(in)    :: rhs  !< Right-hand side
+type(qg_fields),intent(in) :: rhs     !< Right-hand side
 
 ! Check resolution
 call qg_fields_check_resolution(self,rhs)
@@ -490,7 +490,7 @@ implicit none
 
 ! Passed variables
 type(qg_fields),intent(inout) :: self !< Fields
-type(qg_fields),intent(in)    :: rhs  !< Right-hand side
+type(qg_fields),intent(in) :: rhs     !< Right-hand side
 
 ! Check resolution
 call qg_fields_check_resolution(self,rhs)
@@ -538,7 +538,7 @@ implicit none
 
 ! Passed variables
 type(qg_fields),intent(inout) :: self !< Fields
-type(qg_fields),intent(in)    :: rhs  !< Right-hand side
+type(qg_fields),intent(in) :: rhs     !< Right-hand side
 
 ! Check fields
 call qg_fields_check(self)
@@ -597,68 +597,195 @@ type(qg_fields),intent(inout) :: fld !< Fields
 type(qg_fields),intent(in)    :: rhs !< Right-hand side
 
 integer :: ix,iy,iz
-real(kind_real), allocatable, dimension(:,:,:) :: q1, q2
+real(kind_real),allocatable :: q1(:,:,:),q2(:,:,:),ext_var(:,:,:)
 
 if ((fld%geom%nx==rhs%geom%nx).and.(fld%geom%ny==rhs%geom%ny).and.(fld%geom%nz==rhs%geom%nz)) then
   ! Same resolution
    call qg_fields_copy(fld,rhs)
 else
-  ! Trilinear interpolation
-  do ix=1,fld%geom%nx
-    do iy=1,fld%geom%ny
-      do iz=1,fld%geom%nz
-        if (allocated(rhs%x).and.allocated(fld%x)) then
-          call qg_interp_trilinear(rhs%geom,fld%geom%lon(ix,iy),fld%geom%lat(ix,iy),fld%geom%z(iz), &
-                                   rhs%x,fld%x(ix,iy,iz))
-        endif
-        if (allocated(rhs%q).and.allocated(fld%q)) then
-          call qg_interp_trilinear(rhs%geom,fld%geom%lon(ix,iy),fld%geom%lat(ix,iy),fld%geom%z(iz), &
-                                   rhs%q,fld%q(ix,iy,iz))
-        endif
-        if (allocated(rhs%u).and.allocated(fld%u)) then
-          call qg_interp_trilinear(rhs%geom,fld%geom%lon(ix,iy),fld%geom%lat(ix,iy),fld%geom%z(iz), &
-                                   rhs%u,fld%u(ix,iy,iz))
-        endif
-        if (allocated(rhs%v).and.allocated(fld%v)) then
-          call qg_interp_trilinear(rhs%geom,fld%geom%lon(ix,iy),fld%geom%lat(ix,iy),fld%geom%z(iz), &
-                                   rhs%v,fld%v(ix,iy,iz))
-        endif
+  if (trim(fld%geom%interpolator)=='bicubic') then
+    ! Horizontal bicubic interpolation
+
+    ! Assert that vertical geometry is the same
+    if (fld%geom%nz/=rhs%geom%nz) then
+      call abor1_ftn('qg_fields_change_resol: bicubic interpolation valid only for same vertical levels')
+    endif
+    do iz=1,fld%geom%nz
+      if (fld%geom%z(iz)/=rhs%geom%z(iz)) then
+        call abor1_ftn('qg_fields_change_resol: bicubic interpolation valid only for same vertical levels')
+      endif
+    enddo
+
+    ! Change resolution of fields
+    allocate(ext_var(rhs%geom%nx,-1:rhs%geom%ny+2,rhs%geom%nz))
+    if (allocated(rhs%x).and.allocated(fld%x)) then
+      ! Extend x field by linear extrapolation
+      ext_var(:,1:rhs%geom%ny,:) = rhs%x
+      do iz=1,rhs%geom%nz
+       ext_var(:,0,iz) = rhs%x_south(iz)
+       ext_var(:,-1,iz) = 2*rhs%x_south(iz)-rhs%x(:,1,iz)
+      enddo
+      do iz=1,rhs%geom%nz
+       ext_var(:,rhs%geom%ny+1,iz) = rhs%x_north(iz)
+       ext_var(:,rhs%geom%ny+2,iz) = 2*rhs%x_north(iz)-rhs%x(:,rhs%geom%ny,iz)
+      enddo
+      ! Interpolate
+      do ix=1,fld%geom%nx
+        do iy=1,fld%geom%ny
+          do iz=1,fld%geom%nz
+            call qg_interp_bicubic(rhs%geom,fld%geom%x(ix),fld%geom%y(iy), &
+                                    ext_var(:,:,iz),fld%x(ix,iy,iz))
+          enddo
+        enddo
+      enddo
+    endif
+    if (allocated(rhs%q).and.allocated(fld%q)) then
+      ! Extend q field
+      ext_var(:,1:rhs%geom%ny,:) = rhs%q
+      ext_var(:,-1,:) = rhs%q_south
+      ext_var(:,0,:) = rhs%q_south
+      ext_var(:,rhs%geom%ny+1,:) = rhs%q_north
+      ext_var(:,rhs%geom%ny+2,:) = rhs%q_north
+      ! Interpolate
+      do ix=1,fld%geom%nx
+        do iy=1,fld%geom%ny
+          do iz=1,fld%geom%nz
+            call qg_interp_bicubic(rhs%geom,fld%geom%x(ix),fld%geom%y(iy), &
+                                    ext_var(:,:,iz),fld%q(ix,iy,iz))
+          enddo
+        enddo
+      enddo
+    endif
+    if (allocated(rhs%u).and.allocated(fld%u)) then
+      ! Extend u field
+      ext_var(:,1:rhs%geom%ny,:) = rhs%u
+      ext_var(:,-1,:) = rhs%u(:,1,:)
+      ext_var(:,0,:) = rhs%u(:,1,:)
+      ext_var(:,rhs%geom%ny+1,:) = rhs%u(:,rhs%geom%ny,:)
+      ext_var(:,rhs%geom%ny+2,:) = rhs%u(:,rhs%geom%ny,:)
+      ! Interpolate
+      do ix=0,fld%geom%nx
+        do iy=1,fld%geom%ny
+          do iz=1,fld%geom%nz
+            call qg_interp_bicubic(rhs%geom,fld%geom%x(ix),fld%geom%y(iy), &
+                                    ext_var(:,:,iz),fld%u(ix,iy,iz))
+          enddo
+        enddo
+      enddo
+    endif
+    if (allocated(rhs%v).and.allocated(fld%v)) then
+      ! Extend v field
+      ext_var(:,1:rhs%geom%ny,:) = rhs%v
+      ext_var(:,-1:0,:) = 0.0_kind_real
+      ext_var(:,rhs%geom%ny+1:rhs%geom%ny+2,:) = 0.0_kind_real
+      ! Interpolate
+      do ix=1,fld%geom%nx
+        do iy=1,fld%geom%ny
+          do iz=1,fld%geom%nz
+            call qg_interp_bicubic(rhs%geom,fld%geom%x(ix),fld%geom%y(iy), &
+                                    ext_var(:,:,iz),fld%v(ix,iy,iz))
+          enddo
+        enddo
+      enddo
+    endif
+    deallocate(ext_var)
+
+    ! Deal with boundary conditions
+    if (fld%lbc) then
+      if (rhs%lbc) then
+        ! Use bicubic interpolation to interpolate 1D lbc of q.
+        allocate(q1(rhs%geom%nx,-1:rhs%geom%ny+2,rhs%geom%nz))
+        allocate(q2(fld%geom%nx,fld%geom%ny,fld%geom%nz))
+        do iy=-1,rhs%geom%ny+2
+          q1(:,iy,:) = rhs%q_south
+        enddo
+        do iz=1,fld%geom%nz
+          do ix=1,fld%geom%nx
+            call qg_interp_bicubic(rhs%geom,fld%geom%x(ix),fld%geom%y(1),q1(:,:,iz),q2(ix,1,iz) )
+          enddo
+        enddo
+        fld%q_south = q2(:,1,:)
+        do iy=-1,rhs%geom%ny+2
+          q1(:,iy,:) = rhs%q_north
+        enddo
+        do iz=1,fld%geom%nz
+          do ix=1,fld%geom%nx
+            call qg_interp_bicubic(rhs%geom,fld%geom%x(ix),fld%geom%y(1),q1(:,:,iz),q2(ix,1,iz))
+          enddo
+        enddo
+        fld%q_north = q2(:,1,:)
+        deallocate(q1,q2)
+        fld%x_north = rhs%x_north
+        fld%x_south = rhs%x_south
+      else
+        fld%x_north = 0.0_kind_real
+        fld%x_south = 0.0_kind_real
+        fld%q_north = 0.0_kind_real
+        fld%q_south = 0.0_kind_real
+      endif
+    endif
+
+  elseif (trim(fld%geom%interpolator)=='trilinear') then
+    ! Trilinear interpolation
+
+    do ix=1,fld%geom%nx
+      do iy=1,fld%geom%ny
+        do iz=1,fld%geom%nz
+          if (allocated(rhs%x).and.allocated(fld%x)) then
+            call qg_interp_trilinear(rhs%geom,fld%geom%lon(ix,iy),fld%geom%lat(ix,iy),fld%geom%z(iz), &
+                                    rhs%x,fld%x(ix,iy,iz))
+          endif
+          if (allocated(rhs%q).and.allocated(fld%q)) then
+            call qg_interp_trilinear(rhs%geom,fld%geom%lon(ix,iy),fld%geom%lat(ix,iy),fld%geom%z(iz), &
+                                    rhs%q,fld%q(ix,iy,iz))
+          endif
+          if (allocated(rhs%u).and.allocated(fld%u)) then
+            call qg_interp_trilinear(rhs%geom,fld%geom%lon(ix,iy),fld%geom%lat(ix,iy),fld%geom%z(iz), &
+                                    rhs%u,fld%u(ix,iy,iz))
+          endif
+          if (allocated(rhs%v).and.allocated(fld%v)) then
+            call qg_interp_trilinear(rhs%geom,fld%geom%lon(ix,iy),fld%geom%lat(ix,iy),fld%geom%z(iz), &
+                                    rhs%v,fld%v(ix,iy,iz))
+          endif
+        enddo
       enddo
     enddo
-  enddo
 
-  ! Deal with boundary conditions
-  if (fld%lbc) then
-    if (rhs%lbc) then
-      allocate(q1(rhs%geom%nx,rhs%geom%ny,rhs%geom%nz))
-      allocate(q2(fld%geom%nx,fld%geom%ny,fld%geom%nz))
-      do iy=1,rhs%geom%ny
-        q1(:,iy,:) = rhs%q_south
-      enddo
-      do ix=1,fld%geom%nx
-        do iz=1,fld%geom%nz
-          call qg_interp_trilinear(rhs%geom,fld%geom%lon(ix,1),fld%geom%lat(ix,1),fld%geom%z(iz),q1,q2(ix,1,iz) )
+    ! Deal with boundary conditions
+    if (fld%lbc) then
+      if (rhs%lbc) then
+        allocate(q1(rhs%geom%nx,rhs%geom%ny,rhs%geom%nz))
+        allocate(q2(fld%geom%nx,fld%geom%ny,fld%geom%nz))
+        do iy=1,rhs%geom%ny
+          q1(:,iy,:) = rhs%q_south
         enddo
-      enddo
-      fld%q_south = q2(:,1,:)
-      do iy=1,rhs%geom%ny
-        q1(:,iy,:) = rhs%q_north
-      enddo
-      do ix=1,fld%geom%nx
-        do iz=1,fld%geom%nz
-          call qg_interp_trilinear(rhs%geom,fld%geom%lon(ix,1),fld%geom%lat(ix,1),fld%geom%z(iz),q1,q2(ix,1,iz))
+        do ix=1,fld%geom%nx
+          do iz=1,fld%geom%nz
+            call qg_interp_trilinear(rhs%geom,fld%geom%lon(ix,1),fld%geom%lat(ix,1),fld%geom%z(iz),q1,q2(ix,1,iz) )
+          enddo
         enddo
-      enddo
-      fld%q_north = q2(:,1,:)
-      deallocate(q1,q2)
-      fld%x_north = rhs%x_north
-      fld%x_south = rhs%x_south
-    else
-      fld%x_north = 0.0_kind_real
-      fld%x_south = 0.0_kind_real
-      fld%q_north = 0.0_kind_real
-      fld%q_south = 0.0_kind_real
+        fld%q_south = q2(:,1,:)
+        do iy=1,rhs%geom%ny
+          q1(:,iy,:) = rhs%q_north
+        enddo
+        do ix=1,fld%geom%nx
+          do iz=1,fld%geom%nz
+            call qg_interp_trilinear(rhs%geom,fld%geom%lon(ix,1),fld%geom%lat(ix,1),fld%geom%z(iz),q1,q2(ix,1,iz))
+          enddo
+        enddo
+        fld%q_north = q2(:,1,:)
+        deallocate(q1,q2)
+        fld%x_north = rhs%x_north
+        fld%x_south = rhs%x_south
+      else
+        fld%x_north = 0.0_kind_real
+        fld%x_south = 0.0_kind_real
+        fld%q_north = 0.0_kind_real
+        fld%q_south = 0.0_kind_real
+      endif
     endif
+  else
+    call abor1_ftn('qg_fields_change_resol: wrong interpolator:'//trim(fld%geom%interpolator))
   endif
 endif
 
@@ -699,7 +826,7 @@ else
 
   ! Get filename
   call f_conf%get_or_die("filename",str)
-  call swap_name_member(f_conf, str, 6)
+  call swap_name_member(f_conf,str,6)
   filename = str
   call fckit_log%info('qg_fields_read_file: opening '//trim(filename))
 
@@ -972,11 +1099,11 @@ case ('baroclinic-instability')
   do iz=1,fld%geom%nz
     do iy=1,fld%geom%ny
       do ix=1,fld%geom%nx
-        call baroclinic_instability(fld%geom%x(ix),fld%geom%y(iy),fld%geom%z(iz),'x',x(ix,iy,iz))
+        call baroclinic_instability(fld%geom%y(iy),fld%geom%z(iz),'x',x(ix,iy,iz))
       enddo
     enddo
-    call baroclinic_instability(0.0_kind_real,domain_meridional,fld%geom%z(iz),'x',fld%x_north(iz))
-    call baroclinic_instability(0.0_kind_real,0.0_kind_real,fld%geom%z(iz),'x',fld%x_south(iz))
+    call baroclinic_instability(ymax,fld%geom%z(iz),'x',fld%x_north(iz))
+    call baroclinic_instability(ymin,fld%geom%z(iz),'x',fld%x_south(iz))
   enddo
 case ('large-vortices')
   ! Large vortices
@@ -986,8 +1113,8 @@ case ('large-vortices')
         call large_vortices(fld%geom%x(ix),fld%geom%y(iy),fld%geom%z(iz),'x',x(ix,iy,iz))
       enddo
     enddo
-    call large_vortices(0.0_kind_real,domain_meridional,fld%geom%z(iz),'x',fld%x_north(iz))
-    call large_vortices(0.0_kind_real,0.0_kind_real,fld%geom%z(iz),'x',fld%x_south(iz))
+    call large_vortices(0.0_kind_real,ymax,fld%geom%z(iz),'x',fld%x_north(iz))
+    call large_vortices(0.0_kind_real,ymin,fld%geom%z(iz),'x',fld%x_south(iz))
   enddo
 case ('uniform_field')
   ! Uniform field
@@ -999,6 +1126,7 @@ endselect
 
 ! Compute q
 call convert_x_to_q(fld%geom,x,fld%x_north,fld%x_south,q)
+! Linear extrapolation for q boundary conditions
 do iz=1,fld%geom%nz
   do ix=1,fld%geom%nx
     fld%q_south(ix,iz) = 2.0*q(ix,1,iz)-q(ix,2,iz)
@@ -1194,7 +1322,7 @@ do jvar=1,vars%nvars()
    fieldname = vars%variable(jvar)
    if (.not.afieldset%has_field(trim(fieldname))) then
      ! Create field
-     afield = self%geom%afunctionspace%create_field(name=trim(fieldname),kind=atlas_real(kind_real),levels=self%geom%nz)
+     afield = self%geom%afs%create_field(name=trim(fieldname),kind=atlas_real(kind_real),levels=self%geom%nz)
 
      ! Add field
      call afieldset%add(afield)
@@ -1230,7 +1358,7 @@ do jvar=1,vars%nvars()
      afield = afieldset%field(trim(fieldname))
    else
      ! Create field
-     afield = self%geom%afunctionspace%create_field(name=trim(fieldname),kind=atlas_real(kind_real),levels=self%geom%nz)
+     afield = self%geom%afs%create_field(name=trim(fieldname),kind=atlas_real(kind_real),levels=self%geom%nz)
 
      ! Add field
      call afieldset%add(afield)

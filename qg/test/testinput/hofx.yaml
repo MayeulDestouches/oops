@@ -1,10 +1,10 @@
 geometry:
-  nx: 40
-  ny: 20
+  nx: 60
+  ny: 19
   depths: [4500.0, 5500.0]
 initial condition:
   date: 2010-01-01T00:00:00Z
-  filename: Data/truth.fc.2009-12-15T00:00:00Z.P17D.nc
+  filename: Data/truth.fc.2009-12-31T00:00:00Z.P1D.nc
 model:
   name: QG
   tstep: PT1H
@@ -53,3 +53,4 @@ prints:
 
 test:
   reference filename: testoutput/hofx.test
+  test output filename: testoutput/hofx.log.out

@@ -8,7 +8,7 @@
 
 module qg_gom_interface
 
-use atlas_module, only: atlas_field
+use atlas_module
 use fckit_configuration_module, only: fckit_configuration
 use iso_c_binding
 use datetime_mod
@@ -32,7 +32,7 @@ implicit none
 integer(c_int),intent(inout) :: c_key_self !< GOM
 type(c_ptr),value,intent(in) :: c_locs     !< Locations
 type(c_ptr),value,intent(in) :: c_vars     !< Variables
-integer(c_int),intent(in)    :: nlevs
+integer(c_int),intent(in)    :: nlevs      !< Number of levels
 
 ! Local variables
 type(qg_gom),pointer :: self
@@ -416,7 +416,7 @@ call qg_gom_write_file(self,f_conf)
 end subroutine qg_gom_write_file_c
 ! ------------------------------------------------------------------------------
 !> GOM analytic initialization
-subroutine qg_gom_analytic_init_c(c_key_self,c_locs,c_conf) bind(c,name='qg_gom_analytic_init_f90')
+subroutine qg_gom_analytic_init_c(c_key_self,c_locs,c_conf,c_key_geom) bind(c,name='qg_gom_analytic_init_f90')
 
 implicit none
 
@@ -424,19 +424,22 @@ implicit none
 integer(c_int),intent(in) :: c_key_self !< GOM
 type(c_ptr),value,intent(in) :: c_locs  !< Locations
 type(c_ptr),value,intent(in) :: c_conf  !< Configuration
+integer(c_int),intent(in) :: c_key_geom !< Geometry
 
 ! Local variables
 type(fckit_configuration) :: f_conf
 type(qg_gom),pointer :: self
 type(qg_locs) :: locs
+type(qg_geom),pointer :: geom
 
 ! Interface
 f_conf = fckit_configuration(c_conf)
 call qg_gom_registry%get(c_key_self,self)
 locs = qg_locs(c_locs)
+call qg_geom_registry%get(c_key_geom,geom)
 
 ! Call Fortran
-call qg_gom_analytic_init(self,locs,f_conf)
+call qg_gom_analytic_init(self,locs,f_conf,geom)
 
 end subroutine qg_gom_analytic_init_c
 ! ------------------------------------------------------------------------------

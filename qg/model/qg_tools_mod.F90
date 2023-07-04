@@ -21,8 +21,12 @@ implicit none
 private
 public :: genfilename,ncerr,baroclinic_instability,large_vortices
 ! ------------------------------------------------------------------------------
-real(kind_real),parameter :: ubot = -2.0_kind_real !< Zonal wind at the surface (m/s)
-real(kind_real),parameter :: utop = 58.0_kind_real !< Zonal wind at the top (m/s)
+! Bottom and top zonal wind
+real(kind_real),parameter :: ubot = -2.0_kind_real  !< Zonal wind at the surface [m/s]
+real(kind_real),parameter :: utop = 58.0_kind_real  !< Zonal wind at the top [m/s]
+
+! Tolerance
+real(kind_real),parameter :: eps = 1.0e-6_kind_real !< Tolerance for domain bounds checking
 ! ------------------------------------------------------------------------------
 contains
 ! ------------------------------------------------------------------------------
@@ -52,13 +56,13 @@ type(duration) :: step
 ! Get configuration parameters
 if (f_conf%has("datadir")) then
   call f_conf%get_or_die("datadir",str)
-  call swap_name_member(f_conf, str, 6)
+  call swap_name_member(f_conf,str,6)
   fdbdir = str
 else
   fdbdir = "."
 endif
 call f_conf%get_or_die("exp",str)
-call swap_name_member(f_conf, str, 6)
+call swap_name_member(f_conf,str,6)
 expver = str
 call f_conf%get_or_die("type",str)
 typ = str
@@ -120,27 +124,34 @@ if (info/=nf90_noerr) call abor1_ftn(trim(nf90_strerror(info)))
 end subroutine ncerr
 ! ------------------------------------------------------------------------------
 !> Generate values for baroclinic instability
-subroutine baroclinic_instability(x,y,z,var,res)
+subroutine baroclinic_instability(y,z,var,res)
 
 implicit none
 
 ! Passed variables
-real(kind_real),intent(in) :: x    !< X value
 real(kind_real),intent(in) :: y    !< Y value
 real(kind_real),intent(in) :: z    !< Z value
 character(len=1),intent(in) :: var !< Variable
 real(kind_real),intent(out) :: res !< Results
 
 ! Local variable
-real(kind_real) :: u
+real(kind_real) :: yy,zz,u
 
-! Define zonal wind
-u = ubot+(utop-ubot)*z/domain_depth
+! Define reduced variables
+yy = (y-ymin)/domain_meridional
+zz = z/domain_depth
+
+! Check bounds
+if ((yy<-eps).or.(yy>1.0_kind_real+eps)) call abor1_ftn('baroclinic_instability: y out of bounds')
+if ((zz<-eps).or.(zz>1.0_kind_real+eps)) call abor1_ftn('baroclinic_instability: z out of bounds')
+
+! Define zonal wind (linear profile)
+u = ubot+(utop-ubot)*zz
 
 select case (var)
 case ('x')
   ! Streamfunction
-  res = -u*y
+  res = -u*yy*domain_meridional
 case ('q')
   call abor1_ftn('baroclinic_instability: cannot define q')
 case ('u')
@@ -168,23 +179,33 @@ character(len=1),intent(in) :: var !< Variable
 real(kind_real),intent(out) :: res !< Results
 
 ! Local variable
-real(kind_real) :: ff
+real(kind_real) :: xx,yy,zz,ff
+
+! Define reduced variables
+xx = (x-xmin)/domain_zonal
+yy = (y-ymin)/domain_meridional
+zz = z/domain_depth
+
+! Check bounds
+if ((xx<-eps).or.(xx>1.0_kind_real+eps)) call abor1_ftn('large_vortices: y out of bounds')
+if ((yy<-eps).or.(yy>1.0_kind_real+eps)) call abor1_ftn('large_vortices: y out of bounds')
+if ((zz<-eps).or.(zz>1.0_kind_real+eps)) call abor1_ftn('large_vortices: z out of bounds')
 
 ! Define wind speed
-ff = ubot+(utop-ubot)*z/domain_depth
+ff = ubot+(utop-ubot)*zz
 
 select case (var)
 case ('x')
   ! Streamfunction
-  res = ff*domain_meridional*cos(2.0*pi*x/domain_zonal)*sin(pi*y/domain_meridional)
+  res = ff*domain_meridional*cos(2.0*pi*xx)*sin(pi*yy)
 case ('q')
   call abor1_ftn('large_vortices: cannot define q')
 case ('u')
   ! Zonal wind
-  res = -ff*pi*cos(2.0*pi*x/domain_zonal)*cos(pi*y/domain_meridional)
+  res = -ff*pi*cos(2.0*pi*xx)*cos(pi*yy)
 case ('v')
   ! Meridional wind
-  res = -2.0*ff*pi*domain_meridional/domain_zonal*sin(2.0*pi*x/domain_zonal)*sin(pi*y/domain_meridional)
+  res = -2.0*ff*pi*domain_meridional/domain_zonal*sin(2.0*pi*xx)*sin(pi*yy)
 case default
   call abor1_ftn('large_vortices: wrong variable')
 end select

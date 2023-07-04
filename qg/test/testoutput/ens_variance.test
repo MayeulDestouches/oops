@@ -1,6 +1,6 @@
 Variance: 
 
   Valid time: 2010-01-01T00:00:00Z
-  Resolution = 40, 20, 2
-  Streamfunction         :  Min=  4.7139e+11, Max=  1.5009e+15, RMS=  2.8630e+14
-  Potential vorticity    :  Min=  4.1920e-12, Max=  1.1453e-08, RMS=  1.7498e-09
+  Resolution = 60, 19, 2
+  Streamfunction         :  Min=  1.7713e+12, Max=  3.4525e+15, RMS=  7.6994e+14
+  Potential vorticity    :  Min=  3.2412e-11, Max=  5.4567e-08, RMS=  7.0074e-09

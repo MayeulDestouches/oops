@@ -1,2 +1,3 @@
 *.nc filter=lfs diff=lfs merge=lfs -text
 *.nc4 filter=lfs diff=lfs merge=lfs -text
+qg/test/Data/attractor.fc.2009-11-01T00:00:00Z.P60D.nc filter=lfs diff=lfs merge=lfs -text

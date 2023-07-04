@@ -8,8 +8,12 @@
 #ifndef QG_MODEL_ANALYTICINIT_H_
 #define QG_MODEL_ANALYTICINIT_H_
 
-#include "oops/interface/AnalyticInitBase.h"
+#include <memory>
 
+#include "oops/interface/AnalyticInitBase.h"
+#include "oops/util/parameters/RequiredParameter.h"
+
+#include "oops/qg/GeometryQG.h"
 #include "oops/qg/QgTraits.h"
 
 namespace qg {
@@ -20,6 +24,9 @@ namespace qg {
 /// in the base class)
 class AnalyticInitParameters : public oops::AnalyticInitParametersBase {
   OOPS_CONCRETE_PARAMETERS(AnalyticInitParameters, AnalyticInitParametersBase)
+
+ public:
+  oops::RequiredParameter<GeometryQgParameters> geometry{"geometry", this};
 };
 
 /// AnalyticInit class fills GeoVaLs with analytic formulae
@@ -33,6 +40,7 @@ class AnalyticInit : public oops::interface::AnalyticInitBase<QgObsTraits> {
 
  private:
   Parameters_ options_;
+  GeometryQG geom_;
 };
 
 }  // namespace qg

@@ -62,6 +62,7 @@ type(duration) :: dtstep
 character(len=20) :: ststep
 character(len=160) :: record
 character(len=:),allocatable :: str
+real(kind_real),allocatable :: x(:,:,:)
 
 ! Define time step
 call f_conf%get_or_die("tstep",str)

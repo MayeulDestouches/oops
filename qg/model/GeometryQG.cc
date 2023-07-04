@@ -8,12 +8,14 @@
  * does it submit to any jurisdiction.
  */
 
+#include <math.h>
 #include <sstream>
 
 #include "atlas/field.h"
 #include "atlas/functionspace.h"
 #include "atlas/grid.h"
-#include "atlas/util/Config.h"
+#include "atlas/projection.h"
+#include "atlas/util/Point.h"
 
 #include "oops/base/Variables.h"
 #include "oops/util/abor1_cpp.h"
@@ -26,28 +28,69 @@
 namespace qg {
 // -----------------------------------------------------------------------------
 GeometryQG::GeometryQG(const GeometryQgParameters & params,
-                       const eckit::mpi::Comm & comm) : comm_(comm), levs_(0) {
+                       const eckit::mpi::Comm & comm) : comm_(comm), levs_(1) {
   ASSERT(comm_.size() == 1);
-  qg_geom_setup_f90(keyGeom_, params.toConfiguration());
 
-  int nx = 0;
-  int ny = 0;
-  int nz;
-  double deltax;
-  double deltay;
-  qg_geom_info_f90(keyGeom_, nx, ny, nz, deltax, deltay);
-  levs_ = nz;
+  // Get hard-coded geometry parameters
+  double lat_min, lat_max, domain_zonal, domain_meridional, xmin, ymin, lat_proj, domain_depth;
+  qg_domain_parameters_f90(lat_min, lat_max, domain_zonal, domain_meridional, xmin, ymin,
+    lat_proj, domain_depth);
 
-  // Set ATLAS lon/lat field
-  atlasFieldSet_.reset(new atlas::FieldSet());
-  qg_geom_set_atlas_lonlat_f90(keyGeom_, atlasFieldSet_->get());
-  atlas::Field atlasField = atlasFieldSet_->field("lonlat");
+  // Get geometry input parameters
+  eckit::LocalConfiguration geomConfig(params.toConfiguration());
+  const int nx = geomConfig.getInt("nx", 60);
+  const int ny = geomConfig.getInt("ny", 19);
+  const boost::optional<std::vector<double>> &depths = params.depths.value();
+  if (depths != boost::none) {
+    levs_ = (*depths).size();
+  }
 
-  // Create ATLAS function space
-  atlasFunctionSpace_.reset(new atlas::functionspace::PointCloud(atlasField));
+  // Define projection configuration
+  eckit::LocalConfiguration projConfig;
+  projConfig.set("type", "mercator");
+  projConfig.set("latitude1", lat_proj);
+  const std::vector<double> normalise{-180, 180};
+  projConfig.set("normalise", normalise);
 
-  // Set ATLAS function space pointer in Fortran
-  qg_geom_set_atlas_functionspace_pointer_f90(keyGeom_, atlasFunctionSpace_->get());
+  // Initialize eckit communicator for ATLAS
+  eckit::mpi::setCommDefault(comm_.name().c_str());
+
+  // Setup projection
+  atlasProjection_.reset(new atlas::Projection(projConfig));
+
+  // Define geometry and projection configurations
+  const double dx = domain_zonal/static_cast<double>(nx);
+  const double dy = domain_meridional/static_cast<double>(ny+1);
+  std::vector<double> xymin;
+  xymin.push_back(-180.0);
+  atlas::Point2 p;
+  p[0] = 0.0;
+  p[1] = ymin+dy;
+  atlasProjection_->xy2lonlat(p);
+  xymin.push_back(p[1]);
+  geomConfig.set("type", "regional");
+  geomConfig.set("dx", dx);
+  geomConfig.set("dy", dy);
+  geomConfig.set("lonlat(xmin,ymin)", xymin);
+  geomConfig.set("projection", projConfig);
+  oops::Log::info() << "Geometry configuration: " << geomConfig << std::endl;
+
+  // Setup regional grid
+  atlasGrid_.reset(new atlas::StructuredGrid(geomConfig));
+
+  // Setup partitioner
+  const atlas::grid::Partitioner partitioner("serial");
+
+  // Setup distribution
+  const atlas::grid::Distribution distribution(*atlasGrid_, partitioner);
+
+  // Setup function space
+  atlasFunctionSpace_.reset(new atlas::functionspace::StructuredColumns(*atlasGrid_, distribution,
+  geomConfig));
+
+  // Setup Fortran geometry
+  qg_geom_setup_f90(keyGeom_, geomConfig, atlasGrid_->get(), atlasProjection_->get(),
+                    atlasFunctionSpace_->get());
 
   // Fill ATLAS fieldset
   atlasFieldSet_.reset(new atlas::FieldSet());
@@ -56,14 +99,16 @@ GeometryQG::GeometryQG(const GeometryQgParameters & params,
 // -----------------------------------------------------------------------------
 GeometryQG::GeometryQG(const GeometryQG & other) : comm_(other.comm_), levs_(other.levs_) {
   ASSERT(comm_.size() == 1);
-  qg_geom_clone_f90(keyGeom_, other.keyGeom_);
+
+  // Copy ATLAS grid
+  atlasGrid_.reset(new atlas::StructuredGrid(*(other.atlasGrid_)));
 
   // Copy ATLAS function space
-  atlasFunctionSpace_.reset(new atlas::functionspace::PointCloud(
-                            other.atlasFunctionSpace_->lonlat()));
+  atlasFunctionSpace_.reset(new atlas::functionspace::StructuredColumns(
+                            *(other.atlasFunctionSpace_)));
 
-  // Set ATLAS function space pointer in Fortran
-  qg_geom_set_atlas_functionspace_pointer_f90(keyGeom_, atlasFunctionSpace_.get()->get());
+  // Copy Fortran geometry
+  qg_geom_clone_f90(keyGeom_, other.keyGeom_);
 
   // Copy ATLAS fieldset
   atlasFieldSet_.reset(new atlas::FieldSet());

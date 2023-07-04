@@ -4,8 +4,8 @@ cost function:
   window length: PT24H
   analysis variables: [x]
   geometry:
-    nx: 40
-    ny: 20
+    nx: 60
+    ny: 19
     depths: [4500.0, 5500.0]
   model:
     name: QG
@@ -79,8 +79,8 @@ variational:
       name: QgTLM
     ninner: 20
     geometry:
-      nx: 40
-      ny: 20
+      nx: 60
+      ny: 19
       depths: [4500.0, 5500.0]
     test: on
   - gradient norm reduction: 1.0e-10
@@ -92,8 +92,8 @@ variational:
       name: QgTLM
     ninner: 10
     geometry:
-      nx: 40
-      ny: 20
+      nx: 60
+      ny: 19
       depths: [4500.0, 5500.0]
     test: on
 final:
@@ -110,3 +110,4 @@ output:
 
 test:
   reference filename: testoutput/4dvar_obs_biased.test
+  test output filename: testoutput/4dvar_obs_biased.log.out

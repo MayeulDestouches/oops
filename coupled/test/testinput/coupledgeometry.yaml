@@ -1,9 +1,10 @@
 geometry:   # coupled geometry (QG and L95)
   QG:
-    nx: 40
-    ny: 20
+    nx: 60
+    ny: 19
     depths: [4500.0, 5500.0]
   Lorenz 95:
     resol: 40
 test:
   reference filename: testref/coupledgeometry.test
+  test output filename: testoutput/coupledgeometry.log.out

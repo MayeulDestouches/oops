@@ -19,8 +19,8 @@ static oops::AnalyticInitMaker<QgObsTraits, AnalyticInit> makerAnalytic1_("baroc
 static oops::AnalyticInitMaker<QgObsTraits, AnalyticInit> makerAnalytic2_("large-vortices");
 
 // -----------------------------------------------------------------------------
-AnalyticInit::AnalyticInit(const Parameters_ & options) : options_(options)
-{ }
+AnalyticInit::AnalyticInit(const Parameters_ & options) : options_(options),
+ geom_(options.geometry.value()) {}
 // -----------------------------------------------------------------------------
 /*! \brief GeoVaLs Analytic Initialization
  *
@@ -30,7 +30,8 @@ AnalyticInit::AnalyticInit(const Parameters_ & options) : options_(options)
  */
 void AnalyticInit::fillGeoVaLs(const LocationsQG & locs,
                                GomQG & geovals) const {
-  qg_gom_analytic_init_f90(geovals.toFortran(), locs, options_.toConfiguration());
+  qg_gom_analytic_init_f90(geovals.toFortran(), locs, options_.toConfiguration(),
+    geom_.toFortran());
 }
 // -----------------------------------------------------------------------------
 }  // namespace qg

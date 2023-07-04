@@ -6,6 +6,7 @@ output geometry:
   nx: 30
   ny: 9
   depths: [4500.0, 5500.0]
+  interpolator: bicubic
 variable change:
   input variables: [x]
   output variables: [q]
@@ -17,7 +18,7 @@ states:
   output:
     date: 2010-01-01T09:00:00Z
     datadir: Data
-    exp: convert
+    exp: convert_bicubic
     type: fc
 - input:
     date: 2010-01-01T10:00:00Z
@@ -26,9 +27,9 @@ states:
   output:
     date: 2010-01-01T10:00:00Z
     datadir: Data
-    exp: convert
+    exp: convert_bicubic
     type: fc
 
 test:
-  reference filename: testoutput/convertstate.test
-  test output filename: testoutput/convertstate.log.out
+  reference filename: testoutput/convertstate_bicubic.test
+  test output filename: testoutput/convertstate_bicubic.log.out

@@ -4,8 +4,8 @@ cost function:
   window length: PT6H
   analysis variables: [x]
   geometry:
-    nx: 40
-    ny: 20
+    nx: 60
+    ny: 19
     depths: [4500.0, 5500.0]
   model:
     name: QG
@@ -65,8 +65,8 @@ variational:
   - ninner: 10
     gradient norm reduction: 1.0e-10
     geometry:
-      nx: 40
-      ny: 20
+      nx: 60
+      ny: 19
       depths: [4500.0, 5500.0]
     linear model:
       name: Identity
@@ -88,3 +88,4 @@ output:
 
 test:
   reference filename: testoutput/3dfgat.test
+  test output filename: testoutput/3dfgat.log.out

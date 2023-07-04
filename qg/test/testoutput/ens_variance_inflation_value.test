@@ -1,5 +1,5 @@
 Variance: 
 
   Valid time: 2010-01-01T00:00:00Z
-  Resolution = 40, 20, 2
-  Streamfunction         :  Min=  1.8856e+12, Max=  6.0037e+15, RMS=  1.1452e+15
+  Resolution = 60, 19, 2
+  Streamfunction         :  Min=  7.0853e+12, Max=  1.3810e+16, RMS=  3.0797e+15

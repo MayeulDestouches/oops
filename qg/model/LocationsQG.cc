@@ -9,6 +9,7 @@
  */
 
 #include <memory>
+#include <numeric>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -65,17 +66,20 @@ LocationsQG::LocationsQG(const eckit::Configuration & config, const eckit::mpi::
     /*! To create random locations, we need to know the dimensions of the
     * computational domain
     */
-    double lonmin, lonmax, latmin, latmax, zmax;
-    qg_geom_dimensions_f90(lonmin, lonmax, latmin, latmax, zmax);
+    const double lon_min = -180.0;
+    const double lon_max = 180.0;
+    double lat_min, lat_max, domain_zonal, domain_meridional, xmin, ymin, lat_proj, domain_depth;
+    qg_domain_parameters_f90(lat_min, lat_max, domain_zonal, domain_meridional, xmin, ymin,
+      lat_proj, domain_depth);
 
     /*! Now create random locations
     * use a specified random seed for reproducibility
     */
 
-    std::uint32_t rseed = 11;
-    util::UniformDistribution<double> randlons(nrandom, lonmin, lonmax, rseed);
-    util::UniformDistribution<double> randlats(nrandom, latmin, latmax);
-    util::UniformDistribution<double> randzs(nrandom, 0.0, zmax);
+    const std::uint32_t rseed = 11;
+    util::UniformDistribution<double> randlons(nrandom, lon_min, lon_max, rseed);
+    util::UniformDistribution<double> randlats(nrandom, lat_min, lat_max);
+    util::UniformDistribution<double> randzs(nrandom, 0.0, domain_depth);
     randlons.sort();
 
     for (std::size_t jj=0; jj < nrandom; ++jj) {

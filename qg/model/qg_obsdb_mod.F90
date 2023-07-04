@@ -20,7 +20,6 @@ use netcdf
 use qg_constants_mod
 use qg_locs_mod
 use qg_obsvec_mod
-use qg_projection_mod
 use qg_tools_mod
 use random_mod
 use string_f_c_mod
@@ -32,8 +31,10 @@ public :: qg_obsdb
 public :: qg_obsdb_registry
 public :: qg_obsdb_setup,qg_obsdb_delete,qg_obsdb_save,qg_obsdb_get,qg_obsdb_put,qg_obsdb_locations,qg_obsdb_generate,qg_obsdb_nobs
 ! ------------------------------------------------------------------------------
-integer,parameter :: rseed = 1 !< Random seed (for reproducibility)
-
+integer,parameter :: rseed = 1   !< Random seed (for reproducibility)
+integer,parameter :: ngrpmax = 3 !< Number of groups
+integer,parameter :: ncolmax = 7 !< Number of columns
+! ------------------------------------------------------------------------------
 type column_data
   character(len=50) :: colname                !< Column name
   type(column_data),pointer :: next => null() !< Next column
@@ -99,7 +100,7 @@ call fckit_log%info('qg_obsdb_setup: file in = '//trim(fin))
 ! Output file
 if (f_conf%has("obsdataout")) then
   call f_conf%get_or_die("obsdataout.obsfile",str)
-  call swap_name_member(f_conf, str, 6)
+  call swap_name_member(f_conf,str,6)
 
   fout = str
   call fckit_log%info('qg_obsdb_setup: file out = '//trim(fout))
@@ -271,18 +272,17 @@ subroutine qg_obsdb_locations(self,grp,fields,c_times)
 implicit none
 
 ! Passed variables
-type(qg_obsdb),intent(in) :: self   !< Observation data
-character(len=*),intent(in) :: grp  !< Group
-type(atlas_fieldset), intent(inout) :: fields !< Locations FieldSet
-type(c_ptr), intent(in), value :: c_times !< pointer to times array in C++
+type(qg_obsdb),intent(in) :: self            !< Observation data
+character(len=*),intent(in) :: grp           !< Group
+type(atlas_fieldset),intent(inout) :: fields !< Locations FieldSet
+type(c_ptr),intent(in),value :: c_times      !< pointer to times array in C++
 
 ! Local variables
-integer :: nlocs, jo
-character(len=8),parameter :: col = 'Location'
+integer :: nlocs,jo
 type(group_data),pointer :: jgrp
 type(column_data),pointer :: jcol
-type(atlas_field) :: field_z, field_lonlat
-real(kind_real), pointer :: z(:), lonlat(:,:)
+type(atlas_field) :: field_z,field_lonlat
+real(kind_real),pointer :: z(:),lonlat(:,:)
 
 ! Find observation group
 call qg_obsdb_find_group(self,grp,jgrp)
@@ -290,23 +290,23 @@ if (.not.associated(jgrp)) call abor1_ftn('qg_obsdb_locations: obs group not fou
 nlocs = jgrp%nobs
 
 ! Find observation column
-call qg_obsdb_find_column(jgrp,col,jcol)
+call qg_obsdb_find_column(jgrp,'Location',jcol)
 if (.not.associated(jcol)) call abor1_ftn('qg_obsdb_locations: obs column not found')
 
 ! Set number of observations
 
-field_lonlat = atlas_field(name="lonlat", kind=atlas_real(kind_real), shape=[2,nlocs])
-field_z = atlas_field(name="altitude", kind=atlas_real(kind_real), shape=[nlocs])
+field_lonlat = atlas_field(name="lonlat",kind=atlas_real(kind_real),shape=[2,nlocs])
+field_z = atlas_field(name="altitude",kind=atlas_real(kind_real),shape=[nlocs])
 
 call field_lonlat%data(lonlat)
 call field_z%data(z)
 
 ! Copy coordinates
-do jo = 1, nlocs
+do jo = 1,nlocs
   lonlat(1,jo) = jcol%values(1,jo)
   lonlat(2,jo) = jcol%values(2,jo)
   z(jo) = jcol%values(3,jo)
-  call f_c_push_to_datetime_vector(c_times, jgrp%times(jo))
+  call f_c_push_to_datetime_vector(c_times,jgrp%times(jo))
 enddo
 
 call fields%add(field_lonlat)
@@ -319,7 +319,7 @@ call field_z%final()
 end subroutine qg_obsdb_locations
 ! ------------------------------------------------------------------------------
 !> Generate observation data
-subroutine qg_obsdb_generate(self,grp,f_conf,bgn,step,ktimes,kobs)
+subroutine qg_obsdb_generate(self,grp,f_conf,bgn,step,ktimes)
 
 implicit none
 
@@ -330,10 +330,9 @@ type(fckit_configuration),intent(in) :: f_conf !< FCKIT configuration
 type(datetime),intent(in) :: bgn               !< Start time
 type(duration),intent(in) :: step              !< Time-step
 integer,intent(in) :: ktimes                   !< Number of time-slots
-integer,intent(inout) :: kobs                  !< Number of observations
 
 ! Local variables
-integer :: nlev,nlocs
+integer :: nlev,nlocs,kobs
 real(kind_real) :: err
 type(datetime),allocatable :: times(:)
 type(qg_obsvec) :: obsloc,obserr
@@ -403,16 +402,14 @@ type(datetime),intent(in) :: winbgn  !< Start of window
 type(datetime),intent(in) :: winend  !< End of window
 
 ! Local variables
-integer,parameter :: ngrpmax = 3
-integer,parameter :: ncolmax = 7
 integer :: grp_ids(ngrpmax),igrp,nobs_in_grp,iobs,jobs,ncol,col_ids(ncolmax),icol,nlev_id,values_id
 integer :: ncid,nobs_id,times_id
 type(group_data),pointer :: jgrp
 type(column_data),pointer :: jcol
 character(len=50) :: stime
-logical, allocatable :: inwindow(:)
+logical,allocatable :: inwindow(:)
 type(datetime) :: tobs
-type(datetime), allocatable :: alltimes(:)
+type(datetime),allocatable :: alltimes(:)
 real(kind_real),allocatable :: readbuf(:,:)
 
 ! Open NetCDF file
@@ -659,14 +656,9 @@ real(kind_real) :: x(nlocs),y(nlocs),z(nlocs),lon(nlocs),lat(nlocs)
 type(datetime) :: now
 
 ! Generate random locations
-call uniform_distribution(x,0.0_kind_real,domain_zonal,rseed)
-call uniform_distribution(y,0.0_kind_real,domain_meridional,rseed)
+call uniform_distribution(lon,-180.0_kind_real,180.0_kind_real,rseed)
+call uniform_distribution(lat,lat_min,lat_max,rseed)
 call uniform_distribution(z,0.0_kind_real,domain_depth,rseed)
-
-! Convert to lon/lat
-do jobs=1,nlocs
-  call xy_to_lonlat(x(jobs),y(jobs),lon(jobs),lat(jobs))
-enddo
 
 ! Setup observation vector
 call qg_obsvec_setup(obsloc,3,nlocs*ntimes)

@@ -25,8 +25,8 @@ ensemble:
   filename: Data/forecast.ens.5.2009-12-31T00:00:00Z.P1D.nc
 
 geometry:
-  nx: 40
-  ny: 20
+  nx: 60
+  ny: 19
   depths: [4500.0, 5500.0]
 
 recentered output:
@@ -37,3 +37,4 @@ recentered output:
 
 test:
   reference filename: testoutput/hybridgain_analysis.test
+  test output filename: testoutput/hybridgain_analysis.log.out

@@ -1,6 +1,6 @@
 geometry:
-  nx: 40
-  ny: 20
+  nx: 60
+  ny: 19
   depths: [4500.0, 5500.0]
 initial condition:
   date: 2010-01-01T00:00:00Z

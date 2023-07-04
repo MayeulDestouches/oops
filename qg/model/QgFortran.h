@@ -18,6 +18,8 @@
 
 #include "atlas/field.h"
 #include "atlas/functionspace.h"
+#include "atlas/grid.h"
+#include "atlas/projection.h"
 
 // Forward declarations
 namespace eckit {
@@ -71,6 +73,12 @@ extern "C" {
   void qg_change_var_f90(const F90flds &, const oops::Variables &);
   void qg_change_var_tl_f90(const F90flds &, const oops::Variables &);
   void qg_change_var_ad_f90(const F90flds &, const oops::Variables &);
+
+// -----------------------------------------------------------------------------
+//  Constants
+// -----------------------------------------------------------------------------
+  void qg_domain_parameters_f90(double &, double &, double &, double &,
+                                double &, double &, double &, double &);
 
 // -----------------------------------------------------------------------------
 //  Error covariance
@@ -143,15 +151,14 @@ extern "C" {
 // -----------------------------------------------------------------------------
 //  Geometry
 // -----------------------------------------------------------------------------
-  void qg_geom_setup_f90(F90geom &, const eckit::Configuration &);
-  void qg_geom_set_atlas_lonlat_f90(const F90geom &, atlas::field::FieldSetImpl *);
-  void qg_geom_set_atlas_functionspace_pointer_f90(const F90geom &,
-                                                   atlas::functionspace::FunctionSpaceImpl *);
+  void qg_geom_setup_f90(F90geom &, const eckit::Configuration &,
+                         atlas::grid::GridImpl *,
+                         atlas::projection::detail::ProjectionImpl *,
+                         atlas::functionspace::FunctionSpaceImpl *);
   void qg_geom_fill_atlas_fieldset_f90(const F90geom &, atlas::field::FieldSetImpl *);
   void qg_geom_clone_f90(F90geom &, const F90geom &);
   void qg_geom_info_f90(const F90geom &, int &, int &, int &, double &, double &);
   void qg_geom_delete_f90(F90geom &);
-  void qg_geom_dimensions_f90(double &, double &, double &, double &, double &);
 
 // -----------------------------------------------------------------------------
 //  Geometry iterator
@@ -185,7 +192,7 @@ extern "C" {
   void qg_gom_read_file_f90(const F90gom &, const oops::Variables &, const eckit::Configuration &);
   void qg_gom_write_file_f90(const F90gom &, const eckit::Configuration &);
   void qg_gom_analytic_init_f90(const F90gom &, const LocationsQG &,
-                                const eckit::Configuration &);
+                                const eckit::Configuration &, const F90geom &);
 
 // -----------------------------------------------------------------------------
 //  Model
@@ -211,7 +218,7 @@ extern "C" {
                               atlas::field::FieldSetImpl *, std::vector<util::DateTime> &);
   void qg_obsdb_generate_f90(const F90odb &, const int &, const char *,
                              const eckit::Configuration &, const util::DateTime &,
-                             const util::Duration &, const int &, int &);
+                             const util::Duration &, const int &);
   void qg_obsdb_nobs_f90(const F90odb &, const int &, const char *, int &);
 
 // -----------------------------------------------------------------------------

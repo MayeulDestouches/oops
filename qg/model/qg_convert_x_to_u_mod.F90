@@ -35,10 +35,14 @@ integer :: iz
 
 !$omp parallel do schedule(static) private(iz)
 do iz=1,geom%nz
-  u(:,2:geom%ny,iz) = 0.5*x(:,1:geom%ny-1,iz)/geom%deltay
-  u(:,1,iz) = 0.5*x_south(iz)/geom%deltay
-  u(:,1:geom%ny-1,iz) = u(:,1:geom%ny-1,iz)-0.5*x(:,2:geom%ny,iz)/geom%deltay
-  u(:,geom%ny,iz) = u(:,geom%ny,iz)-0.5*x_north(iz)/geom%deltay
+  ! South bound
+  u(:,1,iz) = (x_south(iz)-x(:,2,iz))/(2.0_kind_real*geom%deltay)
+
+  ! Center
+  u(:,2:geom%ny-1,iz) = (x(:,1:geom%ny-2,iz)-x(:,3:geom%ny,iz))/(2.0_kind_real*geom%deltay)
+
+  ! North bound
+  u(:,geom%ny,iz) = (x(:,geom%ny-1,iz)-x_north(iz))/(2.0_kind_real*geom%deltay)
 enddo
 !$omp end parallel do
 
@@ -59,9 +63,14 @@ integer :: iz
 
 !$omp parallel do schedule(static) private(iz)
 do iz=1,geom%nz
-  u(:,2:geom%ny,iz) = 0.5*x(:,1:geom%ny-1,iz)/geom%deltay
-  u(:,1,iz) = 0.0
-  u(:,1:geom%ny-1,iz) = u(:,1:geom%ny-1,iz)-0.5*x(:,2:geom%ny,iz)/geom%deltay
+  ! South bound
+  u(:,1,iz) = -x(:,2,iz)/(2.0_kind_real*geom%deltay)
+
+  ! Center
+  u(:,2:geom%ny-1,iz) = (x(:,1:geom%ny-2,iz)-x(:,3:geom%ny,iz))/(2.0_kind_real*geom%deltay)
+
+  ! North bound
+  u(:,geom%ny,iz) = x(:,geom%ny-1,iz)/(2.0_kind_real*geom%deltay)
 enddo
 !$omp end parallel do
 
@@ -81,8 +90,15 @@ real(kind_real),intent(inout)  :: x(geom%nx,geom%ny,geom%nz) !< Streamfunction
 integer :: iz
 
 do iz=1,geom%nz
-   x(:,2:geom%ny,iz) = x(:,2:geom%ny,iz)-0.5/geom%deltay*u(:,1:geom%ny-1,iz)
-   x(:,1:geom%ny-1,iz) = x(:,1:geom%ny-1,iz)+0.5/geom%deltay*u(:,2:geom%ny,iz)
+  ! South bound
+  x(:,2,iz) = x(:,2,iz)-u(:,1,iz)/(2.0_kind_real*geom%deltay)
+
+  ! Center
+  x(:,1:geom%ny-2,iz) = x(:,1:geom%ny-2,iz)+u(:,2:geom%ny-1,iz)/(2.0_kind_real*geom%deltay)
+  x(:,3:geom%ny,iz) = x(:,3:geom%ny,iz)-u(:,2:geom%ny-1,iz)/(2.0_kind_real*geom%deltay)
+
+  ! North bound
+  x(:,geom%ny-1,iz) = x(:,geom%ny-1,iz)+u(:,geom%ny,iz)/(2.0_kind_real*geom%deltay)
 enddo
 
 end subroutine convert_x_to_u_ad

@@ -1,51 +1,63 @@
 CostJb   : Nonlinear Jb = 0
-CostJo   : Nonlinear Jo(Stream) = 10879.7, nobs = 600, Jo/n = 18.1329, err = 4e+06
-CostJo   : Nonlinear Jo(Wind) = 1663.07, nobs = 600, Jo/n = 2.77178, err = 6
-CostJo   : Nonlinear Jo(WSpeed) = 163.034, nobs = 300, Jo/n = 0.543446, err = 12
-CostFunction: Nonlinear J = 12705.8
-   Norm reduction all members ( 1) = 0.403356, 0.343225, 0.430509, 0.346888
-   Quadratic cost function all members: J ( 1) =  5686.5, 7518.34, 3193.75, 5671.84
-   Norm reduction all members ( 2) =  0.19501, 0.166099, 0.261324, 0.171379
-   Quadratic cost function all members: J ( 2) = 3979.68,  5106.5, 2539.12, 3626.33
-   Norm reduction all members ( 3) =  0.157963,  0.116257,  0.186766, 0.0975856
-   Quadratic cost function all members: J ( 3) = 3313.54, 4131.01, 2182.39, 2977.22
-DRPBlockLanczosMinimizer: reduction in residual norm = 0.157963
+CostJo   : Nonlinear Jo(Stream) = 32454.8, nobs = 600, Jo/n = 54.0914, err = 4e+06
+CostJo   : Nonlinear Jo(Wind) = 5486.85, nobs = 600, Jo/n = 9.14476, err = 6
+CostJo   : Nonlinear Jo(WSpeed) = 399.909, nobs = 300, Jo/n = 1.33303, err = 12
+CostFunction: Nonlinear J = 38341.6
+   Norm reduction all members ( 1) = 0.383312,  0.39649, 0.422408, 0.375047
+   Quadratic cost function all members: J ( 1) = 15558.1, 15281.7, 23909.8, 16127.4
+   Norm reduction all members ( 2) = 0.151748, 0.211391,  0.20667, 0.156305
+   Quadratic cost function all members: J ( 2) =  9376.9, 10627.5, 15400.2,   10606
+   Norm reduction all members ( 3) = 0.0934973,  0.132062,  0.113816,  0.101113
+   Quadratic cost function all members: J ( 3) = 7429.79, 8705.69, 12261.2, 8769.48
+DRPBlockLanczosMinimizer: reduction in residual norm = 0.0934973
 CostFunction::addIncrement: Analysis: 
   Valid time: 2010-01-01T12:00:00Z
-  Resolution = 40, 20, 2
-  Streamfunction         :  Min= -4.4961e+08, Max=  1.0922e+08, RMS=  1.7739e+08
-  Streamfunction LBC     :  Min= -4.0032e+08, Max= -0.0000e+00, RMS=  2.0632e+08
-  Potential vorticity LBC:  Min= -6.7294e-04, Max=  5.7903e-04, RMS=  4.4640e-04
-CostJb   : Nonlinear Jb = 31.4
-CostJo   : Nonlinear Jo(Stream) = 2150, nobs = 600, Jo/n = 3.584, err = 4e+06
-CostJo   : Nonlinear Jo(Wind) = 1104, nobs = 600, Jo/n = 1.84, err = 6
-CostJo   : Nonlinear Jo(WSpeed) = 83.19, nobs = 300, Jo/n = 0.2773, err = 12
-CostFunction: Nonlinear J = 3369
-   Norm reduction all members ( 1) = 0.7232, 0.7177, 0.7904, 0.8577
-   Quadratic cost function all members: J ( 1) = 3027, 3842, 2040, 2804
-   Norm reduction all members ( 2) =  1.023, 0.9856,  1.038,  1.039
-   Quadratic cost function all members: J ( 2) = 2507, 3230, 1779, 2420
-   Norm reduction all members ( 3) = 0.7852, 0.7523, 0.8272, 0.8239
-   Quadratic cost function all members: J ( 3) = 2136, 2689, 1600, 2132
-   Norm reduction all members ( 4) =  0.433, 0.5577, 0.4937, 0.5354
-   Quadratic cost function all members: J ( 4) = 1925, 2458, 1443, 1953
-   Norm reduction all members ( 5) = 0.4364,  0.366, 0.3961, 0.4956
-   Quadratic cost function all members: J ( 5) = 1782, 2137, 1342, 1772
-   Norm reduction all members ( 6) = 0.3469, 0.3007, 0.3383, 0.3857
-   Quadratic cost function all members: J ( 6) = 1651, 1986, 1264, 1620
-   Norm reduction all members ( 7) = 0.2414,  0.217, 0.2573, 0.2922
-   Quadratic cost function all members: J ( 7) = 1549, 1903, 1208, 1545
-   Norm reduction all members ( 8) = 0.1645, 0.1703, 0.1921, 0.1943
-   Quadratic cost function all members: J ( 8) = 1448, 1791, 1148, 1459
-DRPBlockLanczosMinimizer: reduction in residual norm = 0.1645
+  Resolution = 60, 19, 2
+  Streamfunction         :  Min= -4.2009e+08, Max=  1.6598e+08, RMS=  1.7485e+08
+  Streamfunction LBC     :  Min= -3.9036e+08, Max= -0.0000e+00, RMS=  2.0119e+08
+  Potential vorticity LBC:  Min= -8.8260e-04, Max=  6.7036e-04, RMS=  5.5491e-04
+
+
+
+
+
+CostJb   : Nonlinear Jb = 80.45
+CostJo   : Nonlinear Jo(Stream) = 3848, nobs = 600, Jo/n = 6.413, err = 4e+06
+CostJo   : Nonlinear Jo(Wind) = 3131, nobs = 600, Jo/n = 5.218, err = 6
+CostJo   : Nonlinear Jo(WSpeed) = 344.7, nobs = 300, Jo/n = 1.149, err = 12
+CostFunction: Nonlinear J = 7404
+   Norm reduction all members ( 1) = 0.8273, 0.8287, 0.8241, 0.7501
+   Quadratic cost function all members: J ( 1) =      6814,      7914, 1.115e+04,      8044
+   Norm reduction all members ( 2) =  0.818, 0.8597, 0.9013, 0.9031
+   Quadratic cost function all members: J ( 2) = 6099, 7168, 9764, 7239
+   Norm reduction all members ( 3) = 0.6686,  0.594, 0.8675, 0.8574
+   Quadratic cost function all members: J ( 3) = 5674, 6164, 8923, 6681
+   Norm reduction all members ( 4) = 0.4494, 0.4325, 0.5128, 0.5112
+   Quadratic cost function all members: J ( 4) = 5437, 5820, 8333, 6348
+   Norm reduction all members ( 5) = 0.5721, 0.3303,   0.52, 0.5641
+   Quadratic cost function all members: J ( 5) = 5253, 5359, 7902, 5994
+   Norm reduction all members ( 6) = 0.3291,  0.259, 0.3418, 0.2939
+   Quadratic cost function all members: J ( 6) = 4927, 4966, 7092, 5308
+   Norm reduction all members ( 7) =  0.282, 0.1885,  0.292, 0.2988
+   Quadratic cost function all members: J ( 7) = 4495, 4618, 6712, 5010
+   Norm reduction all members ( 8) = 0.2148, 0.1603, 0.2158, 0.2065
+   Quadratic cost function all members: J ( 8) = 4318, 4454, 6380, 4768
+   Norm reduction all members ( 9) =  0.173, 0.1087, 0.1912, 0.1791
+   Quadratic cost function all members: J ( 9) = 4058, 4284, 6053, 4553
+DRPBlockLanczosMinimizer: reduction in residual norm = 0.173
 CostFunction::addIncrement: Analysis: 
   Valid time: 2010-01-01T12:00:00Z
-  Resolution = 40, 20, 2
-  Streamfunction         :  Min= -4.6241e+08, Max=  1.0582e+08, RMS=  1.7688e+08
-  Streamfunction LBC     :  Min= -4.0032e+08, Max= -0.0000e+00, RMS=  2.0632e+08
-  Potential vorticity LBC:  Min= -6.7294e-04, Max=  5.7903e-04, RMS=  4.4640e-04
-CostJb   : Nonlinear Jb = 152.3
-CostJo   : Nonlinear Jo(Stream) = 576.6, nobs = 600, Jo/n = 0.961, err = 4e+06
-CostJo   : Nonlinear Jo(Wind) = 530.9, nobs = 600, Jo/n = 0.8849, err = 6
-CostJo   : Nonlinear Jo(WSpeed) = 79.87, nobs = 300, Jo/n = 0.2662, err = 12
-CostFunction: Nonlinear J = 1340
+  Resolution = 60, 19, 2
+  Streamfunction         :  Min= -4.1280e+08, Max=  1.6476e+08, RMS=  1.7033e+08
+  Streamfunction LBC     :  Min= -3.9036e+08, Max= -0.0000e+00, RMS=  2.0119e+08
+  Potential vorticity LBC:  Min= -8.8260e-04, Max=  6.7036e-04, RMS=  5.5491e-04
+
+
+
+
+
+CostJb   : Nonlinear Jb = 415.4
+CostJo   : Nonlinear Jo(Stream) = 1422, nobs = 600, Jo/n = 2.37, err = 4e+06
+CostJo   : Nonlinear Jo(Wind) = 1861, nobs = 600, Jo/n = 3.102, err = 6
+CostJo   : Nonlinear Jo(WSpeed) = 242.8, nobs = 300, Jo/n = 0.8094, err = 12
+CostFunction: Nonlinear J = 3941

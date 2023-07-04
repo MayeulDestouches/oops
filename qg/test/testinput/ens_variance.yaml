@@ -11,8 +11,8 @@ ensemble:
     pattern: %mem%
     nmembers: 5
 geometry:
-  nx: 40
-  ny: 20
+  nx: 60
+  ny: 19
   depths: [4500.0, 5500.0]
 variance output:
   datadir: Data
@@ -21,3 +21,4 @@ variance output:
   date: 2010-01-01T00:00:00Z
 test:
   reference filename: testoutput/ens_variance.test
+  test output filename: testoutput/ens_variance.log.out

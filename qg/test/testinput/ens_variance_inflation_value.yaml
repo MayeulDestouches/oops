@@ -11,8 +11,8 @@ ensemble:
     nmembers: 5
   inflation value: 2.0
 geometry:
-  nx: 40
-  ny: 20
+  nx: 60
+  ny: 19
   depths: [4500.0, 5500.0]
 variance output:
   datadir: Data
@@ -22,3 +22,4 @@ variance output:
 
 test:
   reference filename: testoutput/ens_variance_inflation_value.test
+  test output filename: testoutput/ens_variance_inflation_value.log.out

@@ -4,8 +4,8 @@ cost function:
   window length: P1D
   analysis variables: [x]
   geometry:
-    nx: 40
-    ny: 20
+    nx: 60
+    ny: 19
     depths: [4500.0, 5500.0]
   model:
     name: QG
@@ -79,8 +79,8 @@ variational:
       name: QgTLM
     ninner: 10
     geometry:
-      nx: 40
-      ny: 20
+      nx: 60
+      ny: 19
       depths: [4500.0, 5500.0]
     test: on
     obs perturbations: false
@@ -95,8 +95,8 @@ variational:
       name: QgTLM
     ninner: 10
     geometry:
-      nx: 40
-      ny: 20
+      nx: 60
+      ny: 19
       depths: [4500.0, 5500.0]
     test: on
 final:

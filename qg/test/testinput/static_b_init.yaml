@@ -5,13 +5,14 @@ background error:
   standard_deviation: 1.8e7
   vertical_length_scale: 15000.0
 geometry:
-  nx: 40
-  ny: 20
+  nx: 60
+  ny: 19
   depths: [4500.0, 5500.0]
 background:
-  filename: Data/truth.fc.2009-12-15T00:00:00Z.P16D.nc
+  filename: Data/truth.fc.2009-12-31T00:00:00Z.PT0S.nc
   date: 2009-12-31T00:00:00Z
 analysis variables: [x]
 
 test:
   reference filename: testoutput/static_b_init.test
+  test output filename: testoutput/static_b_init.log.out

@@ -57,6 +57,9 @@ do iz=1,geom%nz
       x = geom%x(ix)-u(ix,iy,iz)*dt
       y = geom%y(iy)-v(ix,iy,iz)*dt
 
+      ! Set boundaries for y
+      y = max(ymin,min(y,ymax))
+
       ! Interpolate
       call qg_interp_bicubic(geom,x,y,qext(:,:,iz),qnew(ix,iy,iz))
     enddo
@@ -112,12 +115,15 @@ do iz=1,geom%nz
       x = geom%x(ix)-u_traj(ix,iy,iz)*dt
       y = geom%y(iy)-v_traj(ix,iy,iz)*dt
 
+      ! Set boundaries for y
+      y = max(ymin,min(y,ymax))
+
       ! Find interpolation point perturbation
       dx = -u(ix,iy,iz)*dt
       dy = -v(ix,iy,iz)*dt
 
       ! Interpolate
-      call qg_interp_bicubic_tl(geom,x,y,qext_traj(:,:,iz),dx,dy,qext(:,:,iz),qnew(ix,iy,iz)) 
+      call qg_interp_bicubic_tl(geom,x,y,qext_traj(:,:,iz),dx,dy,qext(:,:,iz),qnew(ix,iy,iz))
     enddo
   enddo
 enddo
@@ -165,6 +171,9 @@ do iz=geom%nz,1,-1
       ! Find the interpolation point
       x = geom%x(ix)-u_traj(ix,iy,iz)*dt
       y = geom%y(iy)-v_traj(ix,iy,iz)*dt
+
+      ! Set boundaries for y
+      y = max(ymin,min(y,ymax))
 
       ! Initialization
       dx = 0.0

@@ -92,8 +92,8 @@ cost function:
 #      type: DolphChebyshev
 #      filtered variables: [x]
   geometry:
-    nx: 40
-    ny: 20
+    nx: 60
+    ny: 19
     depths: [4500.0, 5500.0]
 variational:
   minimizer:
@@ -102,8 +102,8 @@ variational:
   - ninner: 10
     gradient norm reduction: 1.0e-10
     geometry:
-      nx: 40
-      ny: 20
+      nx: 60
+      ny: 19
       depths: [4500.0, 5500.0]
     diagnostics:
       departures: ombg
@@ -111,8 +111,8 @@ variational:
   - ninner: 10
     gradient norm reduction: 1.0e-10
     geometry:
-      nx: 40
-      ny: 20
+      nx: 60
+      ny: 19
       depths: [4500.0, 5500.0]
     test: on
 final:
@@ -129,3 +129,5 @@ output:
 
 test:
   reference filename: testoutput/4densvar_hybrid.test
+  test output filename: testoutput/4densvar_hybrid.log.out
+  float relative tolerance: 1.0e-5

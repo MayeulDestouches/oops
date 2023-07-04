@@ -4,8 +4,8 @@ cost function:
   window length: PT6H
   analysis variables: [x]
   geometry:
-    nx: 40
-    ny: 20
+    nx: 60
+    ny: 19
     depths: [4500.0, 5500.0]
   background:
     date: 2010-01-01T12:00:00Z
@@ -64,8 +64,8 @@ variational:
     gradient norm reduction: 1.0e-10
     ninner: 10
     geometry:
-      nx: 40
-      ny: 20
+      nx: 60
+      ny: 19
       depths: [4500.0, 5500.0]
     test: on
   - diagnostics:
@@ -73,8 +73,8 @@ variational:
     gradient norm reduction: 1.0e-10
     ninner: 10
     geometry:
-      nx: 40
-      ny: 20
+      nx: 60
+      ny: 19
       depths: [4500.0, 5500.0]
     test: on
 final:
@@ -88,3 +88,4 @@ output:
 
 test:
   reference filename: testoutput/3densvar.test
+  test output filename: testoutput/3densvar.log.out

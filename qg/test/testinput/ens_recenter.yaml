@@ -17,8 +17,8 @@ ensemble:
 recenter variables: [x]
 
 geometry:
-  nx: 40
-  ny: 20
+  nx: 60
+  ny: 19
   depths: [4500.0, 5500.0]
 
 recentered output:
@@ -29,3 +29,4 @@ recentered output:
 
 test:
   reference filename: testoutput/ens_recenter.test
+  test output filename: testoutput/ens_recenter.log.out

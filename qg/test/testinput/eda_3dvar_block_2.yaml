@@ -3,9 +3,9 @@ cost function:
   window begin: 2010-01-01T09:00:00Z
   window length: PT6H
   analysis variables: [x]
-  geometry:
-    nx: 40
-    ny: 20
+  geometry: 
+    nx: 60
+    ny: 19
     depths: [4500.0, 5500.0]
   background:
     date: 2010-01-01T12:00:00Z
@@ -63,8 +63,8 @@ variational:
     gradient norm reduction: 0.2
     ninner: 10
     geometry:
-      nx: 20
-      ny: 10
+      nx: 60
+      ny: 19
       depths: [4500.0, 5500.0]
     test: on
     obs perturbations: true
@@ -73,8 +73,8 @@ variational:
     gradient norm reduction: 0.2
     ninner: 10
     geometry:
-      nx: 40
-      ny: 20
+      nx: 60
+      ny: 19
       depths: [4500.0, 5500.0]
     test: on
 final:
